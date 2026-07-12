@@ -1,0 +1,402 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  text-align: left;
+}
+
+/* ---- Header ---- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 28px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header__title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.app-header__song-title {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Export button lives directly in the header actions row - promote it to a
+   prominent primary action. */
+.app-header__actions > button {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+  padding: 9px 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-header__actions > button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-contrast);
+  box-shadow: var(--shadow-md);
+}
+
+.autosave-indicator {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.autosave-indicator--saved {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.autosave-indicator--saving {
+  color: var(--color-text-muted);
+}
+
+.autosave-indicator--error {
+  color: var(--color-danger);
+  background: var(--color-danger-surface);
+}
+
+/* ---- Body layout: left rail + main content ---- */
+
+.app-body {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  padding: 24px 28px 40px;
+  align-items: start;
+  flex: 1;
+}
+
+.app-sidebar,
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Card treatment applied uniformly to every top-level panel, regardless of
+   whether the underlying component renders a <section> or a <div> - this
+   lets us re-skin the pre-built, unmodified feature components purely from
+   outside via structural selectors. */
+.app-sidebar > *,
+.app-main > * {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.app-body h2 {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.app-sidebar > * > div,
+.app-main > * > div {
+  margin-bottom: 14px;
+}
+
+/* ---- Lyrics input ---- */
+
+#lyrics-textarea {
+  width: 100%;
+  min-height: 200px;
+}
+
+#lyrics-file-input {
+  width: 100%;
+}
+
+#lines-per-slide-input {
+  width: 90px;
+}
+
+section[aria-labelledby='lyrics-input-heading'] p {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* The single top-level "Generate Slides" button is this section's primary action. */
+section[aria-labelledby='lyrics-input-heading'] > button {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 4px;
+}
+
+section[aria-labelledby='lyrics-input-heading'] > button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-contrast);
+}
+
+/* ---- Slide list ---- */
+
+section[aria-labelledby='slide-list-heading'] ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+section[aria-labelledby='slide-list-heading'] li {
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface-alt) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 10px 12px !important;
+  margin-bottom: 0 !important;
+  box-shadow: none;
+  transition:
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+section[aria-labelledby='slide-list-heading'] li:hover {
+  border-color: var(--color-accent) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+section[aria-labelledby='slide-list-heading'] li[aria-current='true'] {
+  border-color: var(--color-accent) !important;
+  background: var(--color-accent-surface) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}
+
+section[aria-labelledby='slide-list-heading'] li button {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+/* ---- Slide preview ---- */
+
+section[aria-labelledby='slide-preview-heading'] > div {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+section[aria-labelledby='slide-preview-heading'] > div > div {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+section[aria-labelledby='slide-preview-heading'] p {
+  margin-top: 10px;
+}
+
+/* ---- Slide editor & translation panel (own class hooks) ---- */
+
+.slide-editor h2,
+.translation-panel h2 {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.slide-editor label[for],
+.translation-panel > label {
+  display: block;
+  margin-top: 14px;
+}
+
+.slide-editor textarea {
+  width: 100%;
+  min-height: 90px;
+  margin-top: 6px;
+}
+
+.slide-editor__no-translation {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px 14px;
+  margin: 14px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+fieldset legend {
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+fieldset label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+}
+
+fieldset input,
+fieldset select {
+  width: 110px;
+}
+
+.translation-panel select {
+  display: block;
+  margin-top: 6px;
+  min-width: 220px;
+}
+
+.translation-panel > button {
+  margin-top: 14px;
+  margin-right: 10px;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.translation-panel > button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-contrast);
+}
+
+.translation-panel > button + button {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.translation-panel > button + button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.translation-panel [role='status'],
+.translation-panel [role='alert'] {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
+/* ---- Song manager ---- */
+
+.song-manager__error {
+  color: var(--color-danger);
+  background: var(--color-danger-surface);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+
+.song-manager__new-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.song-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.song-manager__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.song-manager__item:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.song-manager__load-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.song-manager__load-button:hover:not(:disabled) {
+  color: var(--color-accent);
+  border: none;
+}
+
+.song-manager__title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--color-text-heading);
+}
+
+.song-manager__updated-at {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+#new-song-title {
+  min-width: 180px;
+}
+
+@media (max-width: 1100px) {
+  .app-body {
+    grid-template-columns: 1fr;
+  }
+}
