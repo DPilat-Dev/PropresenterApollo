@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { exportSongToPro6Xml } from './pro6Builder'
 import { parsePro6ForTests } from './proPresenterImportForTests'
+import { DEFAULT_FILL_COLOR } from '../../types/song'
 import type { Slide, SlideGroup, Song, TextElementState } from '../../types/song'
 
 const EPSILON = 1e-6
@@ -16,6 +17,7 @@ function makeTextElement(overrides: Partial<TextElementState>): TextElementState
     plainText: 'default text',
     position: { x: 160, y: 700, z: 0, width: 1600, height: 300 },
     style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } },
+    fillColor: { ...DEFAULT_FILL_COLOR },
     verticalAlignment: 'bottom',
     opacity: 1,
     rotation: 0,
@@ -36,6 +38,9 @@ const slide1: Slide = {
     plainText: 'Path: C:\\Users\\test\nSet {a, b} & <tag> "quoted"',
     position: { x: 50, y: 60, z: 0, width: 800, height: 200 },
     style: { fontFamily: 'Arial', fontSizePt: 48, lineSpacingPct: 100, color: { r: 0.9, g: 0.1, b: 0.1, a: 1 } },
+    // Deliberately distinct from style.color above, to prove fillColor (not
+    // style.color) drives the exported <fillColor> element.
+    fillColor: { r: 0.3, g: 0.6, b: 0.2, a: 0.4 },
     verticalAlignment: 'top',
   }),
   translationText: null,
@@ -157,15 +162,24 @@ describe('pro6 export/import round-trip', () => {
     })
   })
 
-  it('round-trips each slide main text color within epsilon', () => {
+  it('round-trips each slide main text fill color within epsilon', () => {
     const originals = [slide1, slide2, slide3]
     parsed.slides.forEach((parsedSlide, i) => {
-      const original = originals[i].mainText.style.color
+      const original = originals[i].mainText.fillColor
       expect(Math.abs(parsedSlide.mainColor.r - original.r)).toBeLessThan(EPSILON)
       expect(Math.abs(parsedSlide.mainColor.g - original.g)).toBeLessThan(EPSILON)
       expect(Math.abs(parsedSlide.mainColor.b - original.b)).toBeLessThan(EPSILON)
       expect(Math.abs(parsedSlide.mainColor.a - original.a)).toBeLessThan(EPSILON)
     })
+  })
+
+  it('round-trips an element with no explicit fillColor as transparent (alpha 0)', () => {
+    // slide2 and slide3's mainText never override fillColor, so they fall
+    // back to makeTextElement's default (DEFAULT_FILL_COLOR: alpha 0).
+    expect(slide2.mainText.fillColor.a).toBe(0)
+    expect(slide3.mainText.fillColor.a).toBe(0)
+    expect(parsed.slides[1].mainColor.a).toBe(0)
+    expect(parsed.slides[2].mainColor.a).toBe(0)
   })
 
   it('produces distinct positions per slide (sanity check fixture varies)', () => {

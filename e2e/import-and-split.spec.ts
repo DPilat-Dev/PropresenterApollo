@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { expectNoConsoleErrors, slideListItems, trackPageErrors } from './helpers'
+import { expectNoConsoleErrors, slideListItems, startNewSongFromHome, trackPageErrors } from './helpers'
 
 test.describe('import and split', () => {
   test('splits pasted multi-verse lyrics into slides, skipping the blank line, at the configured lines-per-slide', async ({
@@ -7,6 +7,7 @@ test.describe('import and split', () => {
   }) => {
     const errors = trackPageErrors(page)
     await page.goto('/')
+    await startNewSongFromHome(page)
 
     const lyrics = ['Verse one line one', 'Verse one line two', '', 'Verse two line one', 'Verse two line two'].join(
       '\n',

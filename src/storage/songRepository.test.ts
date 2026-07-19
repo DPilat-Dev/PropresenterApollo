@@ -1,6 +1,7 @@
 import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Slide, Song } from '../types/song'
+import { DEFAULT_FILL_COLOR } from '../types/song'
 
 function makeFixtureSlide(overrides?: Partial<Slide>): Slide {
   return {
@@ -15,6 +16,7 @@ function makeFixtureSlide(overrides?: Partial<Slide>): Slide {
       plainText: 'Amazing grace',
       position: { x: 0, y: 0, z: 0, width: 100, height: 100 },
       style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } },
+      fillColor: { ...DEFAULT_FILL_COLOR },
       verticalAlignment: 'center',
       opacity: 1,
       rotation: 0,
@@ -164,6 +166,67 @@ describe('songRepository', () => {
 
     // loadSong should likewise treat the corrupted record as absent rather than throw.
     await expect(repo.loadSong('corrupted-song')).resolves.toBeUndefined()
+  })
+
+  it('backfills fillColor on mainText/translationText for pre-migration records missing it', async () => {
+    // Simulate a song saved before `fillColor` existed on TextElementState by
+    // writing a record directly via the raw idb handle (bypassing saveSong,
+    // which would always include fillColor via the current construction path).
+    const preMigrationMainText = {
+      id: 'main-legacy',
+      role: 'main',
+      plainText: 'Legacy main text',
+      position: { x: 0, y: 0, z: 0, width: 100, height: 100 },
+      style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } },
+      verticalAlignment: 'center',
+      opacity: 1,
+      rotation: 0,
+      // fillColor intentionally omitted
+    }
+    const preMigrationTranslationText = {
+      ...preMigrationMainText,
+      id: 'translation-legacy',
+      role: 'translation',
+      plainText: 'Legacy translation text',
+      // fillColor intentionally omitted
+    }
+    const preMigrationSong = {
+      id: 'pre-migration-song',
+      title: 'Legacy Song',
+      rawLyrics: 'legacy lyrics',
+      splitSettings: { linesPerSlide: 2, skipBlankLines: true },
+      slides: [
+        {
+          id: 'legacy-slide',
+          label: 'Verse 1',
+          notes: '',
+          enabled: true,
+          backgroundColor: { r: 0, g: 0, b: 0, a: 1 },
+          mainText: preMigrationMainText,
+          translationText: preMigrationTranslationText,
+          order: 0,
+        },
+      ],
+      groups: [],
+      targetLanguage: null,
+      createdAt: '2020-01-01T00:00:00.000Z',
+      updatedAt: '2020-01-01T00:00:00.000Z',
+    }
+
+    const db = await dbModule.getDb()
+    // @ts-expect-error - intentionally missing fillColor to simulate a pre-migration record
+    await db.put('songs', preMigrationSong)
+
+    const loaded = await repo.loadSong('pre-migration-song')
+    expect(loaded).toBeDefined()
+    expect(loaded!.slides[0].mainText.fillColor).toEqual(DEFAULT_FILL_COLOR)
+    expect(loaded!.slides[0].translationText!.fillColor).toEqual(DEFAULT_FILL_COLOR)
+
+    const all = await repo.listSongs()
+    const listed = all.find((s) => s.id === 'pre-migration-song')
+    expect(listed).toBeDefined()
+    expect(listed!.slides[0].mainText.fillColor).toEqual(DEFAULT_FILL_COLOR)
+    expect(listed!.slides[0].translationText!.fillColor).toEqual(DEFAULT_FILL_COLOR)
   })
 
   it('wraps underlying idb failures in StorageError instead of leaking the raw error', async () => {

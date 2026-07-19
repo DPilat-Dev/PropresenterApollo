@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Slide, SlideGroup, Song, TextElementState } from '../../types/song'
+import { DEFAULT_FILL_COLOR } from '../../types/song'
 import { buildPro6Filename, downloadSongAsPro6, sanitizeFilename } from './exportSong'
 
 function makeTextElement(overrides: Partial<TextElementState> = {}): TextElementState {
@@ -9,6 +10,7 @@ function makeTextElement(overrides: Partial<TextElementState> = {}): TextElement
     plainText: 'Amazing grace',
     position: { x: 160, y: 700, z: 0, width: 1600, height: 300 },
     style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } },
+    fillColor: { ...DEFAULT_FILL_COLOR },
     verticalAlignment: 'bottom',
     opacity: 1,
     rotation: 0,

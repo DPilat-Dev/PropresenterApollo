@@ -1,12 +1,16 @@
 import fs from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
-import { expectNoConsoleErrors, generateSlides, slideListItems, trackPageErrors } from './helpers'
+import { expectNoConsoleErrors, generateSlides, slideListItems, startNewSongFromHome, trackPageErrors } from './helpers'
 
 test.describe('export to pro6', () => {
-  test('Export button is disabled before any song exists', async ({ page }) => {
+  test('Export button is disabled for a freshly created song with no slides yet', async ({ page }) => {
     const errors = trackPageErrors(page)
     await page.goto('/')
+    // No song exists yet, so the export action isn't even reachable (it lives
+    // in the editor header) until a song is created from the home view.
+    await expect(page.getByRole('button', { name: /export to propresenter/i })).toHaveCount(0)
 
+    await startNewSongFromHome(page)
     await expect(page.getByRole('button', { name: /export to propresenter/i })).toBeDisabled()
 
     expectNoConsoleErrors(errors)

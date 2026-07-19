@@ -1,5 +1,6 @@
 import { getDb, SONGS_STORE } from './db'
-import type { Song } from '../types/song'
+import type { Song, TextElementState } from '../types/song'
+import { DEFAULT_FILL_COLOR } from '../types/song'
 
 /**
  * Thrown whenever persistence to/from IndexedDB fails - e.g. the browser
@@ -25,6 +26,27 @@ function isValidSong(record: unknown): record is Song {
     Array.isArray(candidate.slides) &&
     typeof candidate.updatedAt === 'string'
   )
+}
+
+function backfillFillColor(el: TextElementState): TextElementState {
+  return el.fillColor ? el : { ...el, fillColor: { ...DEFAULT_FILL_COLOR } }
+}
+
+/**
+ * Backfills fields that were added to `TextElementState` after some songs
+ * were already persisted (e.g. `fillColor`). Distinct from `isValidSong`,
+ * which only checks structural validity - this fills in defaults for
+ * records that are valid but predate a schema addition.
+ */
+function normalizeSong(song: Song): Song {
+  return {
+    ...song,
+    slides: song.slides.map((slide) => ({
+      ...slide,
+      mainText: backfillFillColor(slide.mainText),
+      translationText: slide.translationText === null ? null : backfillFillColor(slide.translationText),
+    })),
+  }
 }
 
 /**
@@ -58,7 +80,7 @@ export async function loadSong(id: string): Promise<Song | undefined> {
     return undefined
   }
 
-  return record
+  return normalizeSong(record)
 }
 
 /** Returns all saved songs, sorted by updatedAt descending (most recently updated first). */
@@ -74,7 +96,7 @@ export async function listSongs(): Promise<Song[]> {
   const validSongs: Song[] = []
   for (const record of records) {
     if (isValidSong(record)) {
-      validSongs.push(record)
+      validSongs.push(normalizeSong(record))
     } else {
       console.warn('Skipping corrupted song record encountered while listing songs', record)
     }

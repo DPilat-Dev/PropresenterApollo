@@ -6,6 +6,8 @@ import { SlideEditor } from './features/slide-editor/SlideEditor'
 import { TranslationPanel } from './features/translation/TranslationPanel'
 import { ExportButton } from './features/export/ExportButton'
 import { SongManager } from './features/song-manager/SongManager'
+import { HomePage } from './features/home/HomePage'
+import { QuickEditPanel } from './features/quick-edit/QuickEditPanel'
 import { useDebouncedAutosave } from './hooks/useDebouncedAutosave'
 import { useAppStore } from './state/store'
 
@@ -35,14 +37,26 @@ function AutosaveIndicator() {
 }
 
 function App() {
-  const songTitle = useAppStore((s) => s.song?.title ?? null)
+  const song = useAppStore((s) => s.song)
+
+  // No song loaded yet: show the welcoming landing view instead of the
+  // (mostly-empty) editor shell. Creating or loading a song from there sets
+  // `song` in the store, which flips this component straight into the
+  // editor below - no routing involved.
+  if (!song) {
+    return (
+      <div className="app-shell">
+        <HomePage />
+      </div>
+    )
+  }
 
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="app-header__title">
           <h1>Lyrics → ProPresenter 6</h1>
-          {songTitle && <span className="app-header__song-title">{songTitle}</span>}
+          <span className="app-header__song-title">{song.title}</span>
         </div>
         <div className="app-header__actions">
           <AutosaveIndicator />
@@ -55,6 +69,7 @@ function App() {
           <SongManager />
           <LyricsInput />
           <SlideList />
+          <QuickEditPanel />
         </aside>
 
         <main className="app-main">

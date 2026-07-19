@@ -51,7 +51,7 @@ function buildTextElement(el: TextElementState): XmlNode {
       { tag: 'RVRect3D', text: serializeRect3D(el.position) },
       // The spec groups fillColor with the "Contains" list alongside RVRect3D
       // rather than the attribute list, so we treat it as a child element too.
-      { tag: 'fillColor', text: serializeColor(el.style.color) },
+      { tag: 'fillColor', text: serializeColor(el.fillColor) },
       {
         tag: 'NSString',
         attrs: { rvXMLIvarName: 'RTFData' },

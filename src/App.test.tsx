@@ -24,18 +24,41 @@ afterEach(() => {
 })
 
 describe('App', () => {
-  it('renders the full page composition without console errors', async () => {
+  it('shows the home/landing view (not the editor shell) when there is no active song', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     render(<App />)
 
     expect(screen.getByRole('heading', { name: /lyrics.*propresenter/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /how it works/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /saved songs/i })).toBeInTheDocument()
+
+    // The editor-only panels must not be present yet.
+    expect(screen.queryByLabelText('Paste lyrics')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /export to propresenter/i })).not.toBeInTheDocument()
+
+    // Let the async listSongs() effect in SongManager settle before asserting no errors logged.
+    await screen.findByText(/no saved songs yet|failed to list songs/i)
+
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it('shows the full editor shell once a song exists in the store', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    useAppStore.getState().newSong('My Song')
+    render(<App />)
+
     expect(screen.getByLabelText('Paste lyrics')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /generate slides/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /export to propresenter/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /saved songs/i })).toBeInTheDocument()
+    // A brand-new song has no slides yet, so Quick Edit (which needs at least
+    // one slide) is not shown - see the slide-generation test below for that.
+    expect(screen.queryByRole('group', { name: /quick edit/i })).not.toBeInTheDocument()
+    // The landing-only content must be gone.
+    expect(screen.queryByRole('heading', { name: /how it works/i })).not.toBeInTheDocument()
 
-    // Let the async listSongs() effect in SongManager settle before asserting no errors logged.
     await screen.findByText(/no saved songs yet|failed to list songs/i)
 
     expect(consoleError).not.toHaveBeenCalled()
@@ -44,6 +67,8 @@ describe('App', () => {
   it('pasting lyrics and generating slides makes them appear in the slide list and preview', async () => {
     const { default: userEvent } = await import('@testing-library/user-event')
     const user = userEvent.setup()
+
+    useAppStore.getState().newSong('My Song')
     render(<App />)
 
     await user.type(screen.getByLabelText('Paste lyrics'), 'line one{Enter}line two')
@@ -51,5 +76,20 @@ describe('App', () => {
 
     expect(useAppStore.getState().song?.slides.length).toBeGreaterThan(0)
     expect(screen.getByTestId('slide-preview-canvas')).toBeInTheDocument()
+    // Once slides exist, the bulk Quick Edit fieldset mounts in the sidebar.
+    expect(screen.getByRole('group', { name: /quick edit/i })).toBeInTheDocument()
+  })
+
+  it('creating a new song from the home view transitions straight into the editor', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event')
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByTestId('new-song-button'))
+    await user.type(screen.getByTestId('new-song-title-input'), 'Home Flow Song')
+    await user.click(screen.getByRole('button', { name: /^create$/i }))
+
+    expect(useAppStore.getState().song?.title).toBe('Home Flow Song')
+    expect(screen.getByLabelText('Paste lyrics')).toBeInTheDocument()
   })
 })

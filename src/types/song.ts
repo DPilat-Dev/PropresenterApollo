@@ -36,6 +36,7 @@ export interface TextElementState {
   plainText: string
   position: Rect3D
   style: TextStyle
+  fillColor: RGBAColor
   verticalAlignment: VerticalAlignment
   opacity: number
   rotation: number
@@ -96,6 +97,7 @@ export const DEFAULT_MAIN_TEXT_POSITION: Rect3D = { x: 160, y: 700, z: 0, width:
 export const DEFAULT_TRANSLATION_TEXT_POSITION: Rect3D = { x: 160, y: 900, z: 0, width: 1600, height: 120 }
 
 export const DEFAULT_TEXT_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 1 }
+export const DEFAULT_FILL_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 0 }
 export const DEFAULT_SLIDE_BACKGROUND: RGBAColor = { r: 0, g: 0, b: 0, a: 1 }
 
 export const DEFAULT_MAIN_TEXT_STYLE: TextStyle = {

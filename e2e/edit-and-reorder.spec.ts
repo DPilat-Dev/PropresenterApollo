@@ -58,4 +58,33 @@ test.describe('edit slide and preview wiring', () => {
 
     expectNoConsoleErrors(errors)
   })
+
+  test('Quick Edit applies vertical alignment to every slide at once, not just the previously selected one', async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page)
+    await page.goto('/')
+
+    await generateSlides(page, 'First slide line one\nFirst slide line two\n\nSecond slide line one\nSecond slide line two')
+
+    const items = slideListItems(page)
+    await expect(items).toHaveCount(2)
+
+    // Select the first slide (default per-slide alignment is "bottom") so we can
+    // later prove the bulk action reaches slide 1 too, which was never selected.
+    await selectSlideAt(page, 0)
+    const perSlideAlignment = page.getByLabel('Main text vertical alignment', { exact: true })
+    await expect(perSlideAlignment).toHaveValue('bottom')
+
+    const quickEditSelect = page.getByLabel('Main text vertical alignment for all slides')
+    await quickEditSelect.selectOption('center')
+
+    await selectSlideAt(page, 0)
+    await expect(perSlideAlignment).toHaveValue('center')
+
+    await selectSlideAt(page, 1)
+    await expect(perSlideAlignment).toHaveValue('center')
+
+    expectNoConsoleErrors(errors)
+  })
 })

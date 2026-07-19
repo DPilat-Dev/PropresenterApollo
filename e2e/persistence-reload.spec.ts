@@ -15,12 +15,11 @@ test.describe('persistence across reload', () => {
     await page.reload()
 
     // App.tsx / songSlice.ts do not auto-restore the most recent song on
-    // startup - `song` starts as `null` again after a reload. The user must
-    // explicitly load it from the Song Manager's "Saved Songs" list, which
-    // refreshes itself from IndexedDB on mount.
-    await expect(page.locator('section[aria-labelledby="slide-list-heading"]')).toContainText(
-      'Paste lyrics above to get started.',
-    )
+    // startup - `song` starts as `null` again after a reload, so the app
+    // shows the home/landing view again. The user must explicitly load the
+    // song from the Song Manager's "Saved Songs" list there (which refreshes
+    // itself from IndexedDB on mount) to get back into the editor.
+    await expect(page.getByRole('heading', { name: 'Saved Songs' })).toBeVisible()
 
     const loadButton = page.locator('[data-testid^="load-song-"]').first()
     await expect(loadButton).toBeVisible({ timeout: 10_000 })
@@ -34,7 +33,7 @@ test.describe('persistence across reload', () => {
     expectNoConsoleErrors(errors)
   })
 
-  test('a fresh browser context loads to a clean empty state with no console errors', async ({ page }) => {
+  test('a fresh browser context loads to the home/landing view with no console errors', async ({ page }) => {
     const errors = trackPageErrors(page)
 
     // Every Playwright test already runs in its own isolated context (fresh
@@ -42,11 +41,10 @@ test.describe('persistence across reload', () => {
     await page.goto('/')
 
     await expect(page.getByRole('heading', { name: 'Lyrics → ProPresenter 6' })).toBeVisible()
-    await expect(page.locator('section[aria-labelledby="slide-list-heading"]')).toContainText(
-      'Paste lyrics above to get started.',
-    )
-    await expect(page.getByRole('button', { name: /export to propresenter/i })).toBeDisabled()
+    await expect(page.getByRole('heading', { name: /how it works/i })).toBeVisible()
     await expect(page.getByText('No saved songs yet.')).toBeVisible()
+    // The editor shell (only reachable once a song exists) must not be shown yet.
+    await expect(page.getByLabel(/paste lyrics/i)).toHaveCount(0)
 
     expectNoConsoleErrors(errors)
   })

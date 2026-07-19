@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { XMLParser } from 'fast-xml-parser'
 import { exportSongToPro6Xml } from './pro6Builder'
+import { DEFAULT_FILL_COLOR } from '../../types/song'
 import type { Slide, SlideGroup, Song, TextElementState } from '../../types/song'
 
 function makeTextElement(overrides: Partial<TextElementState> = {}): TextElementState {
@@ -10,6 +11,7 @@ function makeTextElement(overrides: Partial<TextElementState> = {}): TextElement
     plainText: 'Amazing grace',
     position: { x: 160, y: 700, z: 0, width: 1600, height: 300 },
     style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } },
+    fillColor: { ...DEFAULT_FILL_COLOR },
     verticalAlignment: 'bottom',
     opacity: 1,
     rotation: 0,
@@ -113,6 +115,24 @@ describe('exportSongToPro6Xml', () => {
     const xml = exportSongToPro6Xml(song)
     const matches = xml.match(/<RVTextElement/g) ?? []
     expect(matches.length).toBe(2)
+  })
+
+  it('builds the <fillColor> element from el.fillColor, not el.style.color', () => {
+    const slide = makeSlide({
+      id: 's1',
+      mainText: makeTextElement({
+        style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 0.1, g: 0.2, b: 0.3, a: 1 } },
+        fillColor: { r: 0.9, g: 0.8, b: 0.7, a: 0.5 },
+      }),
+    })
+    const group: SlideGroup = { id: 'g1', name: 'Verse', color: { r: 0, g: 0, b: 0, a: 1 }, slideIds: ['s1'] }
+    const song = makeSong([slide], [group])
+
+    const xml = exportSongToPro6Xml(song)
+    const match = xml.match(/<fillColor>([^<]*)<\/fillColor>/)
+    expect(match).not.toBeNull()
+    expect(match![1]).toBe('0.9 0.8 0.7 0.5')
+    expect(match![1]).not.toBe('0.1 0.2 0.3 1')
   })
 
   it('produces one RVSlideGrouping per SlideGroup', () => {

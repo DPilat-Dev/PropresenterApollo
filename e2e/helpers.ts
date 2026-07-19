@@ -32,10 +32,29 @@ export function expectNoConsoleErrors(errors: string[]): void {
 }
 
 /**
+ * Creates a new song from the home/landing view (title "E2E Song" unless
+ * overridden), which transitions the app into the editor shell. No-ops if
+ * the editor is already showing (e.g. a song already exists).
+ */
+export async function startNewSongFromHome(page: Page, title = 'E2E Song'): Promise<void> {
+  const newSongButton = page.getByTestId('new-song-button')
+  if (!(await newSongButton.isVisible().catch(() => false))) {
+    // Already past the home view (editor shell showing).
+    return
+  }
+  await newSongButton.click()
+  await page.getByTestId('new-song-title-input').fill(title)
+  await page.getByRole('button', { name: /^create$/i }).click()
+}
+
+/**
  * Types multi-line lyrics into the textarea, sets lines-per-slide, and clicks
- * Generate. Leaves the page with a generated song in the store.
+ * Generate. Leaves the page with a generated song in the store. Starts a new
+ * song from the home view first if the editor isn't showing yet.
  */
 export async function generateSlides(page: Page, lyrics: string, linesPerSlide = 2): Promise<void> {
+  await startNewSongFromHome(page)
+
   await page.getByLabel(/paste lyrics/i).fill(lyrics)
 
   const linesInput = page.locator('#lines-per-slide-input')

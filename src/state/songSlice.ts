@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { Slide, SlideGroup, Song, TextElementState } from '../types/song'
 import {
+  DEFAULT_FILL_COLOR,
   DEFAULT_MAIN_TEXT_POSITION,
   DEFAULT_MAIN_TEXT_STYLE,
   DEFAULT_SLIDE_BACKGROUND,
@@ -18,6 +19,7 @@ function createTextElement(role: TextRole, plainText: string): TextElementState 
     plainText,
     position: isMain ? { ...DEFAULT_MAIN_TEXT_POSITION } : { ...DEFAULT_TRANSLATION_TEXT_POSITION },
     style: { ...(isMain ? DEFAULT_MAIN_TEXT_STYLE : DEFAULT_TRANSLATION_TEXT_STYLE) },
+    fillColor: { ...DEFAULT_FILL_COLOR },
     verticalAlignment: 'bottom',
     opacity: 1,
     rotation: 0,
@@ -90,6 +92,25 @@ function updateElement(
   }
 }
 
+/** Applies an updater to every slide's given text element (role), skipping slides with no translation element. */
+function updateAllElements(
+  song: Song,
+  role: TextRole,
+  updater: (el: TextElementState) => TextElementState,
+): Song {
+  return {
+    ...song,
+    updatedAt: nowIso(),
+    slides: song.slides.map((slide) => {
+      if (role === 'main') {
+        return { ...slide, mainText: updater(slide.mainText) }
+      }
+      if (slide.translationText === null) return slide
+      return { ...slide, translationText: updater(slide.translationText) }
+    }),
+  }
+}
+
 export const createSongSlice: Slice<SongSlice> = (set, get) => ({
   song: null,
 
@@ -146,6 +167,12 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     const song = get().song
     if (!song) return
     set({ song: updateElement(song, slideId, role, (el) => ({ ...el, verticalAlignment })) })
+  },
+
+  updateAllSlidesVerticalAlignment: (role, verticalAlignment) => {
+    const song = get().song
+    if (!song) return
+    set({ song: updateAllElements(song, role, (el) => ({ ...el, verticalAlignment })) })
   },
 
   reorderSlides: (orderedSlideIds) => {
