@@ -93,8 +93,13 @@ export function translationCacheKey(sourceLang: string, targetLang: string, sour
   return `${sourceLang}|${targetLang}|${sourceText}`
 }
 
-export const DEFAULT_MAIN_TEXT_POSITION: Rect3D = { x: 160, y: 700, z: 0, width: 1600, height: 300 }
-export const DEFAULT_TRANSLATION_TEXT_POSITION: Rect3D = { x: 160, y: 900, z: 0, width: 1600, height: 120 }
+// Lower-third layout: main text sits above translation text, stacked with a clear
+// 20px gap between their boxes (no overlap) and a 40px margin above the canvas
+// bottom edge (matches PLACEMENT_MARGIN in songSlice.ts). Main text keeps its
+// original 300px height (room for ~3 lines at 60pt); translation's box is sized
+// for its own (larger) default font — see DEFAULT_TRANSLATION_TEXT_STYLE below.
+export const DEFAULT_MAIN_TEXT_POSITION: Rect3D = { x: 160, y: 560, z: 0, width: 1600, height: 300 }
+export const DEFAULT_TRANSLATION_TEXT_POSITION: Rect3D = { x: 160, y: 880, z: 0, width: 1600, height: 160 }
 
 export const DEFAULT_TEXT_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 1 }
 export const DEFAULT_FILL_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 0 }
@@ -107,9 +112,13 @@ export const DEFAULT_MAIN_TEXT_STYLE: TextStyle = {
   color: DEFAULT_TEXT_COLOR,
 }
 
+// 48pt (80% of the main text's 60pt) reads as clearly related to the main text
+// rather than a jarring drop-off (the old 36pt was only 60% of main). Kept a
+// little below 60 rather than equal so a same-width two-line translation still
+// comfortably fits its 160px-tall box without crowding.
 export const DEFAULT_TRANSLATION_TEXT_STYLE: TextStyle = {
   fontFamily: 'Arial',
-  fontSizePt: 36,
+  fontSizePt: 48,
   lineSpacingPct: 100,
   color: DEFAULT_TEXT_COLOR,
 }

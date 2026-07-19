@@ -14,7 +14,7 @@ export interface SongSlice {
   updateSlideStyle: (slideId: string, role: TextRole, style: Partial<TextStyle>) => void
   updateSlidePosition: (slideId: string, role: TextRole, position: Rect3D) => void
   updateSlideVerticalAlignment: (slideId: string, role: TextRole, alignment: VerticalAlignment) => void
-  updateAllSlidesVerticalAlignment: (role: TextRole, alignment: VerticalAlignment) => void
+  updateAllSlidesPlacement: (role: TextRole, zone: VerticalAlignment) => void
   reorderSlides: (orderedSlideIds: string[]) => void
   mergeSlides: (slideIdsInOrder: string[]) => void
   splitSlideAtLine: (slideId: string, lineIndex: number) => void

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAppStore } from '../../state/store'
+import { CANVAS_HEIGHT } from '../../types/song'
 import { QuickEditPanel } from './QuickEditPanel'
 
 beforeEach(() => {
@@ -35,6 +36,8 @@ describe('QuickEditPanel', () => {
   it('selecting Center in the main-text row updates every slide, not just one', async () => {
     const song = importTwoSlides()
     expect(song.slides.length).toBeGreaterThanOrEqual(2)
+    const originalHeights = song.slides.map((s) => s.mainText.position.height)
+    const originalPositions = song.slides.map((s) => ({ ...s.mainText.position }))
     const user = userEvent.setup()
     render(<QuickEditPanel />)
 
@@ -43,9 +46,14 @@ describe('QuickEditPanel', () => {
 
     const updated = useAppStore.getState().song!
     expect(updated.slides.length).toBeGreaterThanOrEqual(2)
-    for (const slide of updated.slides) {
+    updated.slides.forEach((slide, i) => {
       expect(slide.mainText.verticalAlignment).toBe('center')
-    }
+      // The whole box moves, not just text-within-box alignment.
+      expect(slide.mainText.position.y).toBe((CANVAS_HEIGHT - originalHeights[i]) / 2)
+      expect(slide.mainText.position.x).toBe(originalPositions[i].x)
+      expect(slide.mainText.position.width).toBe(originalPositions[i].width)
+      expect(slide.mainText.position.height).toBe(originalPositions[i].height)
+    })
   })
 
   it('does not render the translation row when no slide has translation text', () => {
@@ -77,7 +85,7 @@ describe('QuickEditPanel', () => {
 
   it('re-selecting the same alignment option twice in a row re-applies it (uncontrolled trigger, not a bound value)', async () => {
     importTwoSlides()
-    useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'bottom')
+    useAppStore.getState().updateAllSlidesPlacement('main', 'bottom')
     const user = userEvent.setup()
     render(<QuickEditPanel />)
 
@@ -88,7 +96,7 @@ describe('QuickEditPanel', () => {
     // Manually flip everything back to bottom outside the component, then
     // re-pick "top" again via the (remounted) select to prove the second pick
     // still fires even though it's nominally "the same" choice as before.
-    useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'bottom')
+    useAppStore.getState().updateAllSlidesPlacement('main', 'bottom')
     await user.selectOptions(select(), 'top')
 
     expect(useAppStore.getState().song!.slides.every((s) => s.mainText.verticalAlignment === 'top')).toBe(true)

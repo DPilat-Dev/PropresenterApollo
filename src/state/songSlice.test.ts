@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DEFAULT_FILL_COLOR, DEFAULT_TRANSLATION_TEXT_POSITION, DEFAULT_TRANSLATION_TEXT_STYLE } from '../types/song'
+import {
+  CANVAS_HEIGHT,
+  DEFAULT_FILL_COLOR,
+  DEFAULT_TRANSLATION_TEXT_POSITION,
+  DEFAULT_TRANSLATION_TEXT_STYLE,
+} from '../types/song'
 import { splitLyrics } from '../lib/lyrics/splitLyrics'
 import { useAppStore } from './store'
 
@@ -109,22 +114,56 @@ describe('songSlice via useAppStore', () => {
     })
   })
 
-  describe('updateAllSlidesVerticalAlignment', () => {
-    it('changes every slide mainText.verticalAlignment and bumps updatedAt when role is main', async () => {
+  describe('updateAllSlidesPlacement', () => {
+    it('moves every slide mainText box to the top and sets verticalAlignment, leaving x/z/width/height unchanged, and bumps updatedAt', async () => {
       useAppStore.getState().importLyrics('a\nb\n\nc\nd\n\ne\nf', 2)
       const before = useAppStore.getState().song!
       expect(before.slides.length).toBeGreaterThanOrEqual(3)
       const previousUpdatedAt = before.updatedAt
+      const originalPositions = before.slides.map((s) => ({ ...s.mainText.position }))
 
       await new Promise((r) => setTimeout(r, 5))
 
-      useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'top')
+      useAppStore.getState().updateAllSlidesPlacement('main', 'top')
       const after = useAppStore.getState().song!
 
-      for (const slide of after.slides) {
+      after.slides.forEach((slide, i) => {
         expect(slide.mainText.verticalAlignment).toBe('top')
-      }
+        expect(slide.mainText.position.y).toBe(40)
+        expect(slide.mainText.position.x).toBe(originalPositions[i].x)
+        expect(slide.mainText.position.z).toBe(originalPositions[i].z)
+        expect(slide.mainText.position.width).toBe(originalPositions[i].width)
+        expect(slide.mainText.position.height).toBe(originalPositions[i].height)
+      })
       expect(after.updatedAt).not.toBe(previousUpdatedAt)
+    })
+
+    it('computes the center y from CANVAS_HEIGHT and each element height', () => {
+      useAppStore.getState().importLyrics('a\nb\n\nc\nd', 2)
+      const before = useAppStore.getState().song!
+      const heights = before.slides.map((s) => s.mainText.position.height)
+
+      useAppStore.getState().updateAllSlidesPlacement('main', 'center')
+      const after = useAppStore.getState().song!
+
+      after.slides.forEach((slide, i) => {
+        expect(slide.mainText.verticalAlignment).toBe('center')
+        expect(slide.mainText.position.y).toBe((CANVAS_HEIGHT - heights[i]) / 2)
+      })
+    })
+
+    it('computes the bottom y from CANVAS_HEIGHT and each element height', () => {
+      useAppStore.getState().importLyrics('a\nb\n\nc\nd', 2)
+      const before = useAppStore.getState().song!
+      const heights = before.slides.map((s) => s.mainText.position.height)
+
+      useAppStore.getState().updateAllSlidesPlacement('main', 'bottom')
+      const after = useAppStore.getState().song!
+
+      after.slides.forEach((slide, i) => {
+        expect(slide.mainText.verticalAlignment).toBe('bottom')
+        expect(slide.mainText.position.y).toBe(CANVAS_HEIGHT - heights[i] - 40)
+      })
     })
 
     it('only changes slides that already have translationText when role is translation, without creating new ones', () => {
@@ -137,11 +176,15 @@ describe('songSlice via useAppStore', () => {
       useAppStore.getState().updateSlideText(id2, 'translation', 'tres')
       expect(useAppStore.getState().song!.slides[1].translationText).toBeNull()
 
-      useAppStore.getState().updateAllSlidesVerticalAlignment('translation', 'center')
+      const heights = useAppStore.getState().song!.slides.map((s) => s.translationText?.position.height)
+
+      useAppStore.getState().updateAllSlidesPlacement('translation', 'center')
       const after = useAppStore.getState().song!
 
       expect(after.slides[0].translationText!.verticalAlignment).toBe('center')
+      expect(after.slides[0].translationText!.position.y).toBe((CANVAS_HEIGHT - heights[0]!) / 2)
       expect(after.slides[2].translationText!.verticalAlignment).toBe('center')
+      expect(after.slides[2].translationText!.position.y).toBe((CANVAS_HEIGHT - heights[2]!) / 2)
       expect(after.slides[1].translationText).toBeNull()
     })
 
@@ -152,18 +195,22 @@ describe('songSlice via useAppStore', () => {
       useAppStore.getState().updateSlideText(id0, 'translation', 'uno')
 
       const mainBefore = useAppStore.getState().song!.slides[0].mainText.verticalAlignment
-      useAppStore.getState().updateAllSlidesVerticalAlignment('translation', 'top')
+      const mainPositionBefore = { ...useAppStore.getState().song!.slides[0].mainText.position }
+      useAppStore.getState().updateAllSlidesPlacement('translation', 'top')
       expect(useAppStore.getState().song!.slides[0].mainText.verticalAlignment).toBe(mainBefore)
+      expect(useAppStore.getState().song!.slides[0].mainText.position).toEqual(mainPositionBefore)
 
       const translationBefore = useAppStore.getState().song!.slides[0].translationText!.verticalAlignment
-      useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'bottom')
+      const translationPositionBefore = { ...useAppStore.getState().song!.slides[0].translationText!.position }
+      useAppStore.getState().updateAllSlidesPlacement('main', 'bottom')
       expect(useAppStore.getState().song!.slides[0].translationText!.verticalAlignment).toBe(translationBefore)
+      expect(useAppStore.getState().song!.slides[0].translationText!.position).toEqual(translationPositionBefore)
     })
 
     it('is a no-op and does not throw when song is null', () => {
       expect(useAppStore.getState().song).toBeNull()
       expect(() => {
-        useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'top')
+        useAppStore.getState().updateAllSlidesPlacement('main', 'top')
       }).not.toThrow()
       expect(useAppStore.getState().song).toBeNull()
     })
@@ -257,7 +304,7 @@ describe('songSlice via useAppStore', () => {
         useAppStore.getState().updateSlideStyle('missing', 'main', { fontSizePt: 10 })
         useAppStore.getState().updateSlidePosition('missing', 'main', { x: 0, y: 0, z: 0, width: 1, height: 1 })
         useAppStore.getState().updateSlideVerticalAlignment('missing', 'main', 'top')
-        useAppStore.getState().updateAllSlidesVerticalAlignment('main', 'top')
+        useAppStore.getState().updateAllSlidesPlacement('main', 'top')
         useAppStore.getState().reorderSlides(['a', 'b'])
         useAppStore.getState().mergeSlides(['a', 'b'])
         useAppStore.getState().splitSlideAtLine('missing', 1)

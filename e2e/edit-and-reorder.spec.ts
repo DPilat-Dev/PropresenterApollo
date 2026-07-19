@@ -76,14 +76,22 @@ test.describe('edit slide and preview wiring', () => {
     const perSlideAlignment = page.getByLabel('Main text vertical alignment', { exact: true })
     await expect(perSlideAlignment).toHaveValue('bottom')
 
+    // Default main text box sits near the bottom of the canvas (DEFAULT_MAIN_TEXT_POSITION.y = 560).
+    const perSlideY = page.getByLabel('Main text position y', { exact: true })
+    await expect(perSlideY).toHaveValue('560')
+
     const quickEditSelect = page.getByLabel('Main text vertical alignment for all slides')
     await quickEditSelect.selectOption('center')
 
     await selectSlideAt(page, 0)
     await expect(perSlideAlignment).toHaveValue('center')
+    // The box itself must move to vertical center of the 1080px canvas, not just the
+    // text-within-box alignment - this is the exact regression this test guards against.
+    await expect(perSlideY).toHaveValue('390') // (1080 - 300) / 2, with default box height 300
 
     await selectSlideAt(page, 1)
     await expect(perSlideAlignment).toHaveValue('center')
+    await expect(perSlideY).toHaveValue('390')
 
     expectNoConsoleErrors(errors)
   })

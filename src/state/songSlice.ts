@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { Slide, SlideGroup, Song, TextElementState } from '../types/song'
 import {
+  CANVAS_HEIGHT,
   DEFAULT_FILL_COLOR,
   DEFAULT_MAIN_TEXT_POSITION,
   DEFAULT_MAIN_TEXT_STYLE,
@@ -10,6 +11,22 @@ import {
 } from '../types/song'
 import { splitLyrics } from '../lib/lyrics/splitLyrics'
 import type { Slice, SongSlice, TextRole } from './types'
+import type { VerticalAlignment } from '../types/song'
+
+/** Margin (px) kept between the text box and the canvas edge for top/bottom placement. */
+const PLACEMENT_MARGIN = 40
+
+/** Computes the box's new top-left `y` for a given vertical zone, given that box's own height. */
+function verticalZoneY(zone: VerticalAlignment, height: number): number {
+  switch (zone) {
+    case 'top':
+      return PLACEMENT_MARGIN
+    case 'center':
+      return (CANVAS_HEIGHT - height) / 2
+    case 'bottom':
+      return CANVAS_HEIGHT - height - PLACEMENT_MARGIN
+  }
+}
 
 function createTextElement(role: TextRole, plainText: string): TextElementState {
   const isMain = role === 'main'
@@ -169,10 +186,16 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     set({ song: updateElement(song, slideId, role, (el) => ({ ...el, verticalAlignment })) })
   },
 
-  updateAllSlidesVerticalAlignment: (role, verticalAlignment) => {
+  updateAllSlidesPlacement: (role, zone) => {
     const song = get().song
     if (!song) return
-    set({ song: updateAllElements(song, role, (el) => ({ ...el, verticalAlignment })) })
+    set({
+      song: updateAllElements(song, role, (el) => ({
+        ...el,
+        position: { ...el.position, y: verticalZoneY(zone, el.position.height) },
+        verticalAlignment: zone,
+      })),
+    })
   },
 
   reorderSlides: (orderedSlideIds) => {

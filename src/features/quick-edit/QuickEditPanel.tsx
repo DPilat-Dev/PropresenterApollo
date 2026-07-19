@@ -9,15 +9,17 @@ const ALIGNMENT_OPTIONS: ReadonlyArray<{ value: VerticalAlignment; label: string
 ]
 
 /**
- * Bulk vertical-alignment control: applies a chosen alignment to *every* slide's
- * main (or translation) text element at once, instead of opening each slide
- * individually via the per-slide `SpacingControls` select. Self-contained - reads
- * `song` and the `updateAllSlidesVerticalAlignment` action directly from the store,
+ * Bulk placement control: moves *every* slide's main (or translation) text box
+ * to the top, center, or bottom of the canvas at once (updating `position.y` and
+ * `verticalAlignment` together so the text is anchored consistently within its
+ * newly-placed box), instead of opening each slide individually via the
+ * per-slide `SpacingControls`/`TextBoxPositionControl`. Self-contained - reads
+ * `song` and the `updateAllSlidesPlacement` action directly from the store,
  * no props.
  */
 export function QuickEditPanel() {
   const song = useAppStore((s) => s.song)
-  const updateAllSlidesVerticalAlignment = useAppStore((s) => s.updateAllSlidesVerticalAlignment)
+  const updateAllSlidesPlacement = useAppStore((s) => s.updateAllSlidesPlacement)
 
   // These selects don't represent one "current" alignment shared by every slide
   // (slides may already differ from each other), so each is treated as an
@@ -34,13 +36,13 @@ export function QuickEditPanel() {
 
   const handleMainChange = (value: string) => {
     if (value === '') return
-    updateAllSlidesVerticalAlignment('main', value as VerticalAlignment)
+    updateAllSlidesPlacement('main', value as VerticalAlignment)
     setMainKey((k) => k + 1)
   }
 
   const handleTranslationChange = (value: string) => {
     if (value === '') return
-    updateAllSlidesVerticalAlignment('translation', value as VerticalAlignment)
+    updateAllSlidesPlacement('translation', value as VerticalAlignment)
     setTranslationKey((k) => k + 1)
   }
 

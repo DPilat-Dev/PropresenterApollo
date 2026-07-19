@@ -11,11 +11,11 @@ describe('previewGeometry', () => {
     })
 
     it('maps the default main text position to known percentages', () => {
-      const rect: Rect3D = { x: 160, y: 700, z: 0, width: 1600, height: 300 }
+      const rect: Rect3D = { x: 160, y: 560, z: 0, width: 1600, height: 300 }
       const pct = pixelToPercent(rect)
 
       expect(pct.leftPct).toBeCloseTo((160 / 1920) * 100, 9)
-      expect(pct.topPct).toBeCloseTo((700 / 1080) * 100, 9)
+      expect(pct.topPct).toBeCloseTo((560 / 1080) * 100, 9)
       expect(pct.widthPct).toBeCloseTo((1600 / 1920) * 100, 9)
       expect(pct.heightPct).toBeCloseTo((300 / 1080) * 100, 9)
     })
