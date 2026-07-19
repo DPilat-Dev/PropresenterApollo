@@ -39,7 +39,7 @@ const slide1: Slide = {
     position: { x: 50, y: 60, z: 0, width: 800, height: 200 },
     style: { fontFamily: 'Arial', fontSizePt: 48, lineSpacingPct: 100, color: { r: 0.9, g: 0.1, b: 0.1, a: 1 } },
     // Deliberately distinct from style.color above, to prove fillColor (not
-    // style.color) drives the exported <fillColor> element.
+    // style.color) drives the exported fillColor attribute.
     fillColor: { r: 0.3, g: 0.6, b: 0.2, a: 0.4 },
     verticalAlignment: 'top',
   }),

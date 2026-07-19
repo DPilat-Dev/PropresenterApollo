@@ -58,65 +58,69 @@ export function QuickEditPanel() {
   }
 
   return (
-    <fieldset className="quick-edit-panel">
-      <legend>Quick Edit</legend>
+    <section aria-labelledby="quick-edit-heading" className="quick-edit-panel">
+      <h2 id="quick-edit-heading">Quick Edit</h2>
 
-      <label>
-        Main text
-        <select
-          key={mainKey}
-          aria-label="Main text vertical alignment for all slides"
-          defaultValue=""
-          onChange={(e) => handleMainChange(e.target.value)}
-        >
-          <option value="" disabled>
-            Set all to…
-          </option>
-          {ALIGNMENT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+      <fieldset>
+        <legend>Set all slides</legend>
+
+        <label>
+          Main text
+          <select
+            key={mainKey}
+            aria-label="Main text vertical alignment for all slides"
+            defaultValue=""
+            onChange={(e) => handleMainChange(e.target.value)}
+          >
+            <option value="" disabled>
+              Set all to…
             </option>
-          ))}
-        </select>
-      </label>
-
-      {hasTranslation && (
-        <div className="quick-edit-panel__clamp-row">
-          <label className="quick-edit-panel__checkbox-label">
-            <input
-              type="checkbox"
-              checked={clampTranslation}
-              onChange={(e) => setClampTranslation(e.target.checked)}
-            />
-            Clamp translation under main text
-          </label>
-          <p className="quick-edit-panel__hint">Keeps translation directly below main text when aligning.</p>
-        </div>
-      )}
-
-      {hasTranslation && !clampTranslation && (
-        <div className="quick-edit-panel__translation-row">
-          <label>
-            Translation text
-            <select
-              key={translationKey}
-              aria-label="Translation text vertical alignment for all slides"
-              defaultValue=""
-              onChange={(e) => handleTranslationChange(e.target.value)}
-            >
-              <option value="" disabled>
-                Set all to…
+            {ALIGNMENT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
               </option>
-              {ALIGNMENT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+            ))}
+          </select>
+        </label>
+
+        {hasTranslation && (
+          <div className="quick-edit-panel__clamp-row">
+            <label className="quick-edit-panel__checkbox-label">
+              <input
+                type="checkbox"
+                checked={clampTranslation}
+                onChange={(e) => setClampTranslation(e.target.checked)}
+              />
+              Clamp translation under main text
+            </label>
+            <p className="quick-edit-panel__hint">Keeps translation directly below main text when aligning.</p>
+          </div>
+        )}
+
+        {hasTranslation && !clampTranslation && (
+          <div className="quick-edit-panel__translation-row">
+            <label>
+              Translation text
+              <select
+                key={translationKey}
+                aria-label="Translation text vertical alignment for all slides"
+                defaultValue=""
+                onChange={(e) => handleTranslationChange(e.target.value)}
+              >
+                <option value="" disabled>
+                  Set all to…
                 </option>
-              ))}
-            </select>
-          </label>
-          <p className="quick-edit-panel__hint">Applies to slides with translation text.</p>
-        </div>
-      )}
-    </fieldset>
+                {ALIGNMENT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="quick-edit-panel__hint">Applies to slides with translation text.</p>
+          </div>
+        )}
+      </fieldset>
+    </section>
   )
 }

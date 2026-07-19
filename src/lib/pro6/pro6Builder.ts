@@ -45,13 +45,46 @@ function buildTextElement(el: TextElementState): XmlNode {
       rotation: String(el.rotation),
       verticalAlignment: VERTICAL_ALIGNMENT_MAP[el.verticalAlignment],
       adjustsHeightToFit: 'false',
+      // fillColor is an attribute on RVTextElement itself in real pro6 files,
+      // not a child element - a real "Amazing Grace expanded.pro6" sample
+      // confirms `fillColor="0 0 0 0"` sits directly on the opening tag.
+      // Emitting it as a <fillColor> child (the previous approach) meant
+      // ProPresenter had no attribute to read and fell back to its own
+      // internal default (opaque white), which is exactly the reported bug:
+      // every text field showed an opaque white fill despite our data model
+      // defaulting to transparent.
+      fillColor: serializeColor(el.fillColor),
+      // Hard-coded false: there is no UI yet for a user to configure a
+      // real box fill, so we never want ProPresenter to draw one,
+      // independent of whatever value happens to be stored in fillColor.
+      drawingFill: 'false',
+      // The attributes below have no corresponding field on TextElementState
+      // (nothing in this codebase's data model claims authority over them),
+      // so they're static, safe pro6-compliant defaults taken verbatim from
+      // a real ProPresenter 6 sample file, in the same spirit as the
+      // documented best-effort defaults on buildPro6Document. Keeping them
+      // present and correctly-typed reduces the odds of other undiscovered
+      // "ProPresenter falls back to its own default" bugs like the fillColor
+      // one this function used to have.
+      additionalLineFillHeight: '0.000000',
+      bezelRadius: '0.000000',
+      displayDelay: '0.000000',
+      displayName: 'TextElement',
+      drawLineBackground: 'false',
+      drawingShadow: 'false',
+      drawingStroke: 'false',
+      fromTemplate: 'true',
+      lineFillVerticalOffset: '0.000000',
+      locked: 'false',
+      persistent: 'false',
+      revealType: '0',
+      source: '',
+      typeID: '0',
+      useAllCaps: 'false',
     },
     children: [
       // Position, serialized as pro6's bracketed string form (not nested XML attrs).
       { tag: 'RVRect3D', text: serializeRect3D(el.position) },
-      // The spec groups fillColor with the "Contains" list alongside RVRect3D
-      // rather than the attribute list, so we treat it as a child element too.
-      { tag: 'fillColor', text: serializeColor(el.fillColor) },
       {
         tag: 'NSString',
         attrs: { rvXMLIvarName: 'RTFData' },

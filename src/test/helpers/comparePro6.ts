@@ -43,7 +43,16 @@ export function assertPro6Equivalent(actual: string, golden: string, epsilon = 1
 }
 
 const RECT_KEYS = new Set(['RVRect3D'])
-const COLOR_KEYS = new Set(['fillColor', 'backgroundColor', 'color'])
+// fillColor, backgroundColor, and (group) color are all real pro6 XML
+// attributes (not child elements), so under the attributeNamePrefix: '@_'
+// parser config above they show up as '@_fillColor' etc. The un-prefixed
+// names are kept too in case a future caller feeds in a document shape
+// where one of these appears as a child element instead.
+const COLOR_KEYS = new Set([
+  'fillColor', '@_fillColor',
+  'backgroundColor', '@_backgroundColor',
+  'color', '@_color',
+])
 const RTF_ATTR_MARKER = 'RTFData'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -117,7 +117,7 @@ describe('exportSongToPro6Xml', () => {
     expect(matches.length).toBe(2)
   })
 
-  it('builds the <fillColor> element from el.fillColor, not el.style.color', () => {
+  it('builds the fillColor attribute from el.fillColor, not el.style.color', () => {
     const slide = makeSlide({
       id: 's1',
       mainText: makeTextElement({
@@ -129,10 +129,35 @@ describe('exportSongToPro6Xml', () => {
     const song = makeSong([slide], [group])
 
     const xml = exportSongToPro6Xml(song)
-    const match = xml.match(/<fillColor>([^<]*)<\/fillColor>/)
-    expect(match).not.toBeNull()
-    expect(match![1]).toBe('0.9 0.8 0.7 0.5')
-    expect(match![1]).not.toBe('0.1 0.2 0.3 1')
+    const elementMatch = xml.match(/<RVTextElement\b[^>]*>/)
+    expect(elementMatch).not.toBeNull()
+    const attrMatch = elementMatch![0].match(/fillColor="([^"]*)"/)
+    expect(attrMatch).not.toBeNull()
+    expect(attrMatch![1]).toBe('0.9 0.8 0.7 0.5')
+    expect(attrMatch![1]).not.toBe('0.1 0.2 0.3 1')
+  })
+
+  it('always sets drawingFill="false" on RVTextElement, regardless of fillColor alpha', () => {
+    const slide = makeSlide({
+      id: 's1',
+      mainText: makeTextElement({ fillColor: { r: 0.9, g: 0.8, b: 0.7, a: 0.5 } }),
+    })
+    const group: SlideGroup = { id: 'g1', name: 'Verse', color: { r: 0, g: 0, b: 0, a: 1 }, slideIds: ['s1'] }
+    const song = makeSong([slide], [group])
+
+    const xml = exportSongToPro6Xml(song)
+    const elementMatch = xml.match(/<RVTextElement\b[^>]*>/)
+    expect(elementMatch).not.toBeNull()
+    expect(elementMatch![0]).toMatch(/drawingFill="false"/)
+  })
+
+  it('has no <fillColor> child element anywhere in the exported XML', () => {
+    const slide = makeSlide({ id: 's1' })
+    const group: SlideGroup = { id: 'g1', name: 'Verse', color: { r: 0, g: 0, b: 0, a: 1 }, slideIds: ['s1'] }
+    const song = makeSong([slide], [group])
+
+    const xml = exportSongToPro6Xml(song)
+    expect(xml).not.toMatch(/<fillColor>/)
   })
 
   it('produces one RVSlideGrouping per SlideGroup', () => {

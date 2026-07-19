@@ -84,7 +84,7 @@ export function parsePro6ForTests(xml: string): ParsedPro6Document {
       }
 
       const mainPosition = parseRect3D(textOf(mainEl.RVRect3D))
-      const mainColor = parseColor(textOf(mainEl.fillColor))
+      const mainColor = parseColor(mainEl['@_fillColor'])
 
       slides.push({ plainText, translationPlainText, mainPosition, mainColor })
     }

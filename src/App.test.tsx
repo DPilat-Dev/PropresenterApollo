@@ -55,7 +55,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /saved songs/i })).toBeInTheDocument()
     // A brand-new song has no slides yet, so Quick Edit (which needs at least
     // one slide) is not shown - see the slide-generation test below for that.
-    expect(screen.queryByRole('group', { name: /quick edit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: /quick edit/i })).not.toBeInTheDocument()
     // The landing-only content must be gone.
     expect(screen.queryByRole('heading', { name: /how it works/i })).not.toBeInTheDocument()
 
@@ -76,8 +76,8 @@ describe('App', () => {
 
     expect(useAppStore.getState().song?.slides.length).toBeGreaterThan(0)
     expect(screen.getByTestId('slide-preview-canvas')).toBeInTheDocument()
-    // Once slides exist, the bulk Quick Edit fieldset mounts in the sidebar.
-    expect(screen.getByRole('group', { name: /quick edit/i })).toBeInTheDocument()
+    // Once slides exist, the bulk Quick Edit section mounts in the sidebar.
+    expect(screen.getByRole('region', { name: /quick edit/i })).toBeInTheDocument()
   })
 
   it('creating a new song from the home view transitions straight into the editor', async () => {
