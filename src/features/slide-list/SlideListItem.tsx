@@ -14,9 +14,10 @@ export interface SlideListItemProps {
 }
 
 /**
- * A single row in the slide list. Handles its own selection/delete/split
- * store interactions directly; merge-selection and drag-reorder are lifted
- * to SlideList because they need the full ordered list to compute results.
+ * A single row in the slide list ("Sections" panel). Handles its own
+ * selection/delete/split store interactions directly; merge-selection and
+ * drag-reorder are lifted to SlideList because they need the full ordered
+ * list to compute results.
  */
 export function SlideListItem({
   slide,
@@ -35,6 +36,7 @@ export function SlideListItem({
   const lines = slide.mainText.plainText.split('\n')
   const previewLines = lines.slice(0, 2)
   const canSplit = lines.length > 1
+  const displayLabel = slide.label.trim().length > 0 ? slide.label : `Slide ${index + 1}`
 
   const handleSplit = () => {
     const midpoint = Math.ceil(lines.length / 2)
@@ -55,56 +57,53 @@ export function SlideListItem({
       }}
       onClick={() => selectSlide(slide.id)}
       aria-current={isSelected ? 'true' : undefined}
-      style={{
-        border: isSelected ? '2px solid #4a90e2' : '1px solid #ccc',
-        padding: '0.5rem',
-        marginBottom: '0.25rem',
-        cursor: 'grab',
-        background: isSelected ? '#eef5ff' : undefined,
-      }}
+      className="slide-list-item"
     >
-      <label onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={isCheckedForMerge}
-          onChange={() => onToggleMerge(slide.id)}
-          aria-label={`Select slide ${index + 1} for merge`}
-        />
-        Merge
-      </label>
+      <div className="slide-list-item__top">
+        <span className="badge badge--outline">{displayLabel}</span>
+        <label className="slide-list-item__merge" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isCheckedForMerge}
+            onChange={() => onToggleMerge(slide.id)}
+            aria-label={`Select slide ${index + 1} for merge`}
+          />
+          Merge
+        </label>
+      </div>
 
-      <span style={{ marginLeft: '0.5rem' }}>
+      <p className="slide-list-item__preview">
         {previewLines.map((line, i) => (
           <span key={i}>
-            {line || ' '}
+            {line || ' '}
             {i < previewLines.length - 1 ? ' / ' : ''}
           </span>
         ))}
-        {lines.length > 2 ? ' …' : ''}
-      </span>
+        {lines.length > 2 ? ' more' : ''}
+      </p>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          handleSplit()
-        }}
-        disabled={!canSplit}
-        style={{ marginLeft: '0.5rem' }}
-      >
-        Split
-      </button>
+      <div className="slide-list-item__actions">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleSplit()
+          }}
+          disabled={!canSplit}
+        >
+          Split
+        </button>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          removeSlide(slide.id)
-        }}
-        style={{ marginLeft: '0.5rem' }}
-      >
-        Delete
-      </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            removeSlide(slide.id)
+          }}
+        >
+          Delete
+        </button>
+      </div>
     </li>
   )
 }

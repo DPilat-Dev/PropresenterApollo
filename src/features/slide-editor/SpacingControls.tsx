@@ -1,6 +1,6 @@
 import { useAppStore } from '../../state/store'
 import type { TextRole } from '../../state/types'
-import type { TextStyle, VerticalAlignment } from '../../types/song'
+import type { TextStyle } from '../../types/song'
 
 export const MIN_FONT_SIZE_PT = 12
 export const MAX_FONT_SIZE_PT = 200
@@ -15,18 +15,18 @@ interface SpacingControlsProps {
   slideId: string
   role: TextRole
   style: TextStyle
-  verticalAlignment: VerticalAlignment
   /** Human-readable label used for the fieldset legend and accessible input names, e.g. "Main text". */
   label: string
 }
 
 /**
- * Font size / line spacing / vertical alignment controls for a single text element
- * (main or translation) on the currently selected slide.
+ * Font size / line spacing controls for a single text element (main or
+ * translation) on the currently selected slide. Vertical alignment lives in
+ * `VerticalAlignmentControl` instead (Layout tab), since it's a placement
+ * concern rather than a typography one.
  */
-export function SpacingControls({ slideId, role, style, verticalAlignment, label }: SpacingControlsProps) {
+export function SpacingControls({ slideId, role, style, label }: SpacingControlsProps) {
   const updateSlideStyle = useAppStore((s) => s.updateSlideStyle)
-  const updateSlideVerticalAlignment = useAppStore((s) => s.updateSlideVerticalAlignment)
 
   // onChange intentionally does NOT clamp: clamping every keystroke would corrupt
   // multi-digit entry (e.g. typing "80" starts with "8", which is below the 12pt
@@ -83,19 +83,6 @@ export function SpacingControls({ slideId, role, style, verticalAlignment, label
           onChange={(e) => handleLineSpacingChange(e.target.valueAsNumber)}
           onBlur={(e) => handleLineSpacingBlur(e.target.valueAsNumber)}
         />
-      </label>
-
-      <label>
-        Vertical alignment
-        <select
-          aria-label={`${label} vertical alignment`}
-          value={verticalAlignment}
-          onChange={(e) => updateSlideVerticalAlignment(slideId, role, e.target.value as VerticalAlignment)}
-        >
-          <option value="top">Top</option>
-          <option value="center">Center</option>
-          <option value="bottom">Bottom</option>
-        </select>
       </label>
     </fieldset>
   )

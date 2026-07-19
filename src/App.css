@@ -5,9 +5,365 @@
   text-align: left;
 }
 
-/* ---- Header ---- */
+/* ==================== Home page / top nav ==================== */
 
 .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 28px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-text-heading);
+}
+
+.app-header__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+}
+
+.app-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.app-header__nav-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.app-header__nav-item--active {
+  background: var(--color-surface-alt);
+  color: var(--color-text-heading);
+  border-color: var(--color-border);
+  cursor: default;
+}
+
+.app-header__nav-item--inert:hover:not(:disabled) {
+  color: var(--color-text-heading);
+  border-color: transparent;
+  background: var(--color-surface-alt);
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-header__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border-color: transparent;
+}
+
+.app-header__coming-soon {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.home-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 28px 64px;
+}
+
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-hero h1 {
+  font-size: 2rem;
+  max-width: 620px;
+}
+
+.home-hero__tagline {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 560px;
+}
+
+.home-hero__cta {
+  margin-top: 6px;
+  padding: 10px 20px;
+}
+
+/* ---- Song manager: toolbar, grid, cards ---- */
+
+.song-manager__error {
+  color: var(--color-danger);
+  background: var(--color-danger-surface);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+
+.song-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.song-toolbar__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  color: var(--color-text-muted);
+}
+
+.song-toolbar__search input[type='search'] {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 9px 0;
+}
+
+.song-toolbar__search input[type='search']:focus-visible {
+  box-shadow: none;
+}
+
+.song-toolbar__view-toggle .segmented__item {
+  padding: 7px 10px;
+}
+
+.song-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--color-accent-surface);
+  border: 1px solid var(--color-accent-ring);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.song-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.song-list-header__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.song-list-header__count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+
+.song-manager__new-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#new-song-title {
+  min-width: 180px;
+}
+
+.song-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.song-grid--list {
+  grid-template-columns: 1fr;
+}
+
+.song-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.song-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+
+.song-card--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}
+
+.song-card__checkbox {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  z-index: 1;
+  accent-color: var(--color-accent);
+}
+
+.song-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
+  padding: 18px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  min-width: 0;
+  width: 100%;
+}
+
+.song-card__body:hover:not(:disabled) {
+  color: inherit;
+  border: none;
+}
+
+.song-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+  margin-bottom: 4px;
+}
+
+.song-card__title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text-heading);
+}
+
+.song-manager__updated-at {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.song-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.song-card__delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+
+.song-card__delete:hover:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-danger-surface);
+  border-color: transparent;
+}
+
+.song-grid--list .song-card__body {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ==================== Slide editor shell ==================== */
+
+.editor-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,46 +377,40 @@
   z-index: 10;
 }
 
-.app-header__title {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.app-header__song-title {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.app-header__actions {
+.editor-header__left {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-/* Export button lives directly in the header actions row - promote it to a
-   prominent primary action. */
-.app-header__actions > button {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-accent-contrast);
-  padding: 9px 18px;
-  box-shadow: var(--shadow-sm);
+.editor-header__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
 }
 
-.app-header__actions > button:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  color: var(--color-accent-contrast);
-  box-shadow: var(--shadow-md);
+.editor-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .autosave-indicator {
   font-size: 0.78rem;
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
   transition: color var(--transition-fast), background-color var(--transition-fast);
@@ -80,23 +430,23 @@
   background: var(--color-danger-surface);
 }
 
-/* ---- Body layout: left rail + main content ---- */
+/* ---- Body layout: sections | canvas | style ---- */
 
-.app-body {
+.editor-body {
   display: grid;
-  grid-template-columns: 320px 1fr 280px;
-  gap: 24px;
-  padding: 24px 28px 40px;
+  grid-template-columns: 300px 1fr 340px;
+  gap: 20px;
+  padding: 20px 28px 40px;
   align-items: start;
   flex: 1;
 }
 
-.app-sidebar,
-.app-main,
-.app-quick-edit-rail {
+.editor-sections,
+.editor-canvas-col,
+.editor-style-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -104,20 +454,19 @@
    whether the underlying component renders a <section> or a <div> - this
    lets us re-skin the pre-built, unmodified feature components purely from
    outside via structural selectors. */
-.app-sidebar > *,
-.app-main > *,
-.app-quick-edit-rail > * {
+.editor-sections > *,
+.editor-canvas-col > *,
+.editor-style-col > * {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 18px;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
-.app-body h2 {
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+.editor-body h2 {
+  padding-bottom: 10px;
+  margin-bottom: 14px;
   border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
   font-size: 0.78rem;
@@ -125,17 +474,29 @@
   color: var(--color-text-muted);
 }
 
-.app-sidebar > * > div,
-.app-main > * > div,
-.app-quick-edit-rail > * > div {
-  margin-bottom: 14px;
+.editor-sections > * > div,
+.editor-canvas-col > * > div,
+.editor-style-col > * > div {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1200px) {
+  .editor-body {
+    grid-template-columns: 260px 1fr 300px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .editor-body {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Lyrics input ---- */
 
 #lyrics-textarea {
   width: 100%;
-  min-height: 200px;
+  min-height: 140px;
 }
 
 #lyrics-file-input {
@@ -154,81 +515,157 @@ section[aria-labelledby='lyrics-input-heading'] p {
 
 /* The single top-level "Generate Slides" button is this section's primary action. */
 section[aria-labelledby='lyrics-input-heading'] > button {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-accent-contrast);
   width: 100%;
   padding: 10px 16px;
   margin-top: 4px;
 }
 
-section[aria-labelledby='lyrics-input-heading'] > button:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  color: var(--color-accent-contrast);
+/* ---- Slide list ("Sections") ---- */
+
+.slide-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* ---- Slide list ---- */
+.slide-list__header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
 
-section[aria-labelledby='slide-list-heading'] ul {
+.slide-list__merge-btn {
+  font-size: 0.72rem;
+  padding: 5px 10px;
+}
+
+.slide-list ul {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
 }
 
-section[aria-labelledby='slide-list-heading'] li {
+.slide-list-item {
   border: 1px solid var(--color-border) !important;
   background: var(--color-surface-alt) !important;
   border-radius: var(--radius-md) !important;
   padding: 10px 12px !important;
-  margin-bottom: 0 !important;
-  box-shadow: none;
+  cursor: grab;
   transition:
     box-shadow var(--transition-fast),
     border-color var(--transition-fast),
     background-color var(--transition-fast);
 }
 
-section[aria-labelledby='slide-list-heading'] li:hover {
+.slide-list-item:hover {
   border-color: var(--color-accent) !important;
   box-shadow: var(--shadow-sm);
 }
 
-section[aria-labelledby='slide-list-heading'] li[aria-current='true'] {
+.slide-list-item[aria-current='true'] {
   border-color: var(--color-accent) !important;
   background: var(--color-accent-surface) !important;
   box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
-section[aria-labelledby='slide-list-heading'] li button {
+.slide-list-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slide-list-item__merge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  margin-bottom: 0;
+}
+
+.slide-list-item__merge input {
+  width: auto;
+}
+
+.slide-list-item__preview {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+
+.slide-list-item__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.slide-list-item__actions button {
   padding: 4px 10px;
   font-size: 0.75rem;
 }
 
 /* ---- Slide preview ---- */
 
-section[aria-labelledby='slide-preview-heading'] > div {
-  background: var(--color-surface-alt);
+section[aria-labelledby='slide-preview-heading'] > div:first-of-type {
+  background: var(--color-bg);
   border-radius: var(--radius-md);
   padding: 16px;
 }
 
-section[aria-labelledby='slide-preview-heading'] > div > div {
+.slide-preview-canvas {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
+}
+
+.slide-preview-canvas__label {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.slide-preview__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 0 4px;
+}
+
+.slide-preview__nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border-color: transparent;
+}
+
+.slide-preview__counter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 56px;
+  text-align: center;
 }
 
 section[aria-labelledby='slide-preview-heading'] p {
   margin-top: 10px;
 }
 
-/* ---- Slide editor & translation panel (own class hooks) ---- */
+/* ---- Slide editor (text content only) ---- */
 
-.slide-editor h2,
-.translation-panel h2 {
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+.slide-editor h2 {
+  padding-bottom: 10px;
+  margin-bottom: 14px;
   border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
   font-size: 0.78rem;
@@ -236,15 +673,18 @@ section[aria-labelledby='slide-preview-heading'] p {
   color: var(--color-text-muted);
 }
 
-.slide-editor label[for],
-.translation-panel > label {
+.slide-editor label[for] {
   display: block;
   margin-top: 14px;
 }
 
+.slide-editor label[for]:first-of-type {
+  margin-top: 0;
+}
+
 .slide-editor textarea {
   width: 100%;
-  min-height: 90px;
+  min-height: 80px;
   margin-top: 6px;
 }
 
@@ -254,151 +694,126 @@ section[aria-labelledby='slide-preview-heading'] p {
   color: var(--color-text-muted);
 }
 
-fieldset {
+/* ---- STYLE panel (Layout / Type / Colors / Quality tabs) ---- */
+
+.style-panel__tabs {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.style-panel__tabs .segmented__item {
+  flex: 1;
+  text-align: center;
+}
+
+.style-panel__role-toggle {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.style-panel__role-toggle .segmented__item {
+  flex: 1;
+  text-align: center;
+}
+
+.style-panel__empty {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.style-tab h3 {
+  margin-top: 18px;
+}
+
+.style-tab h3:first-child {
+  margin-top: 0;
+}
+
+.style-tab__section-label--spaced {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.style-tab__hint,
+.style-tab__placeholder {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.style-tab__placeholder {
+  background: var(--color-surface-alt);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.style-tab .style-panel__field {
+  display: block;
+  margin-top: 12px;
+}
+
+.color-field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.color-field-row__label {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.color-field-row__hex {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+/* fieldset (SpacingControls / TextBoxPositionControl) nested inside a tab */
+.style-tab fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 14px 14px;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
 }
 
-fieldset legend {
+.style-tab fieldset legend {
   padding: 0 6px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
 
-fieldset label {
+.style-tab fieldset label {
   display: flex;
   flex-direction: column;
   gap: 4px;
   font-size: 0.75rem;
 }
 
-fieldset input,
-fieldset select {
-  width: 110px;
+.style-tab fieldset input,
+.style-tab fieldset select {
+  width: 100px;
 }
 
-.translation-panel select {
-  display: block;
-  margin-top: 6px;
-  min-width: 220px;
+/* Quick Edit + Translation, nested inside the Layout tab (not top-level
+   cards anymore - a subtle divider is enough to separate them). */
+.style-tab .quick-edit-panel,
+.style-tab .translation-panel {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
-
-.translation-panel > button {
-  margin-top: 14px;
-  margin-right: 10px;
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-accent-contrast);
-}
-
-.translation-panel > button:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  color: var(--color-accent-contrast);
-}
-
-.translation-panel > button + button {
-  background: var(--color-surface);
-  border-color: var(--color-border-strong);
-  color: var(--color-text);
-}
-
-.translation-panel > button + button:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.translation-panel [role='status'],
-.translation-panel [role='alert'] {
-  display: inline-block;
-  margin-top: 12px;
-  font-size: 0.8rem;
-}
-
-/* ---- Song manager ---- */
-
-.song-manager__error {
-  color: var(--color-danger);
-  background: var(--color-danger-surface);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-weight: 600;
-  font-size: 0.82rem;
-  margin-bottom: 10px;
-}
-
-.song-manager__new-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0;
-}
-
-.song-manager__list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 12px 0 0;
-}
-
-.song-manager__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.song-manager__item:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-sm);
-}
-
-.song-manager__load-button {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 2px;
-  padding: 8px 10px;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
-
-.song-manager__load-button:hover:not(:disabled) {
-  color: var(--color-accent);
-  border: none;
-}
-
-.song-manager__title {
-  font-weight: 600;
-  font-size: 0.88rem;
-  color: var(--color-text-heading);
-}
-
-.song-manager__updated-at {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-}
-
-#new-song-title {
-  min-width: 180px;
-}
-
-/* ---- Quick edit panel ---- */
 
 .quick-edit-panel select {
   width: 160px;
@@ -434,106 +849,31 @@ fieldset select {
   color: var(--color-text-muted);
 }
 
-@media (max-width: 1100px) {
-  .app-body {
-    grid-template-columns: 1fr;
-  }
+.translation-panel select {
+  display: block;
+  margin-top: 6px;
+  min-width: 220px;
 }
 
-/* ---- Home / landing page ---- */
-
-.home-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 56px 28px 64px;
+.translation-panel > button {
+  margin-top: 14px;
+  margin-right: 10px;
 }
 
-.home-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  text-align: center;
-}
-
-.home-hero h1 {
-  font-size: 2.1rem;
-}
-
-.home-hero__tagline {
-  color: var(--color-text-muted);
-  font-size: 1rem;
-  line-height: 1.6;
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.home-features,
-.home-page > .song-manager {
+.translation-panel > button + button {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
 }
 
-.home-features h2 {
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
-  text-transform: uppercase;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  color: var(--color-text-muted);
-}
-
-.home-features__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.home-features__list li {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.home-features__list strong {
-  color: var(--color-text-heading);
-  font-size: 0.88rem;
-}
-
-.home-features__list span {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-/* Promote the reused SongManager's "New Song" action to a primary CTA in
-   this landing context (it's a plain secondary button inside the editor
-   sidebar, where SongManager itself already has plenty of visual weight). */
-.home-page [data-testid='new-song-button'] {
-  background: var(--color-accent);
+.translation-panel > button + button:hover:not(:disabled) {
   border-color: var(--color-accent);
-  color: var(--color-accent-contrast);
-  padding: 9px 20px;
+  color: var(--color-accent);
 }
 
-.home-page [data-testid='new-song-button']:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  color: var(--color-accent-contrast);
-}
-
-@media (max-width: 600px) {
-  .home-hero h1 {
-    font-size: 1.6rem;
-  }
+.translation-panel [role='status'],
+.translation-panel [role='alert'] {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.8rem;
 }

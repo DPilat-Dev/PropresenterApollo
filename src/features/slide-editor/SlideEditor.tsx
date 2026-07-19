@@ -1,11 +1,13 @@
 import type { ChangeEvent } from 'react'
 import { useAppStore } from '../../state/store'
-import { SpacingControls } from './SpacingControls'
-import { TextBoxPositionControl } from './TextBoxPositionControl'
 
 /**
- * Self-contained editor for the currently selected slide. Reads `selectedSlideId` and
- * `song` from the store directly (no props) so it can be dropped anywhere in the tree.
+ * Self-contained editor for the currently selected slide's raw text content
+ * (main + translation). Reads `selectedSlideId` and `song` from the store
+ * directly (no props) so it can be dropped anywhere in the tree. Typography,
+ * color, and placement controls for the same slide live in the STYLE panel
+ * (see `src/features/style-panel`), not here - this component owns text
+ * content only.
  *
  * Important product requirement: manual edits to the *translation* textarea must go
  * through `setTranslationOverride`, not `updateSlideText`, so that the translation
@@ -45,15 +47,6 @@ export function SlideEditor() {
       <label htmlFor="slide-editor-main-text">Main text</label>
       <textarea id="slide-editor-main-text" value={slide.mainText.plainText} onChange={handleMainTextChange} />
 
-      <SpacingControls
-        slideId={slide.id}
-        role="main"
-        style={slide.mainText.style}
-        verticalAlignment={slide.mainText.verticalAlignment}
-        label="Main text"
-      />
-      <TextBoxPositionControl slideId={slide.id} role="main" position={slide.mainText.position} label="Main text" />
-
       {slide.translationText !== null ? (
         <>
           <label htmlFor="slide-editor-translation-text">Translation text</label>
@@ -61,20 +54,6 @@ export function SlideEditor() {
             id="slide-editor-translation-text"
             value={slide.translationText.plainText}
             onChange={handleTranslationTextChange}
-          />
-
-          <SpacingControls
-            slideId={slide.id}
-            role="translation"
-            style={slide.translationText.style}
-            verticalAlignment={slide.translationText.verticalAlignment}
-            label="Translation text"
-          />
-          <TextBoxPositionControl
-            slideId={slide.id}
-            role="translation"
-            position={slide.translationText.position}
-            label="Translation text"
           />
         </>
       ) : (

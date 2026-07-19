@@ -331,6 +331,25 @@ describe('songSlice via useAppStore', () => {
     })
   })
 
+  describe('updateSlideBackgroundColor', () => {
+    it('updates only the targeted slide backgroundColor and bumps updatedAt', async () => {
+      useAppStore.getState().importLyrics('a\nb\n\nc\nd', 2)
+      const before = useAppStore.getState().song!
+      const targetId = before.slides[0].id
+      const previousUpdatedAt = before.updatedAt
+
+      await new Promise((r) => setTimeout(r, 5))
+
+      const newColor = { r: 0.5, g: 0.1, b: 0.2, a: 1 }
+      useAppStore.getState().updateSlideBackgroundColor(targetId, newColor)
+      const after = useAppStore.getState().song!
+
+      expect(after.slides[0].backgroundColor).toEqual(newColor)
+      expect(after.slides[1].backgroundColor).not.toEqual(newColor)
+      expect(after.updatedAt).not.toBe(previousUpdatedAt)
+    })
+  })
+
   describe('reorderSlides', () => {
     it('updates group.slideIds to match and updates each slide order field', () => {
       useAppStore.getState().importLyrics('a\nb\nc', 1)

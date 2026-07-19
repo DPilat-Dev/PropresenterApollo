@@ -23,7 +23,7 @@ export function SlideList() {
   if (!song || song.slides.length === 0) {
     return (
       <section aria-labelledby="slide-list-heading">
-        <h2 id="slide-list-heading">Slides</h2>
+        <h3 id="slide-list-heading">Sections</h3>
         <p>Paste lyrics above to get started.</p>
       </section>
     )
@@ -75,12 +75,18 @@ export function SlideList() {
   }
 
   return (
-    <section aria-labelledby="slide-list-heading">
-      <h2 id="slide-list-heading">Slides</h2>
-
-      <button type="button" onClick={handleMergeClick} disabled={mergeSelection.size < 2}>
-        Merge selected
-      </button>
+    <section aria-labelledby="slide-list-heading" className="slide-list">
+      <div className="slide-list__header">
+        <h3 id="slide-list-heading">Sections</h3>
+        <button
+          type="button"
+          className="slide-list__merge-btn"
+          onClick={handleMergeClick}
+          disabled={mergeSelection.size < 2}
+        >
+          Merge selected
+        </button>
+      </div>
 
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {orderedSlides.map((slide, index) => (

@@ -1,25 +1,38 @@
 :root {
-  /* ---- Design tokens: light theme (default) ---- */
-  --color-bg: #f5f5f7;
+  /* ---- Design tokens: light theme (default) ----
+     Companion palette to the dark theme below: same accent/badge hues,
+     lifted onto light surfaces so the two themes read as one system. */
+  --color-bg: #f5f6fa;
   --color-surface: #ffffff;
-  --color-surface-alt: #fafafa;
-  --color-border: #e2e2e6;
-  --color-border-strong: #cfcfd6;
+  --color-surface-alt: #f0f1f6;
+  --color-surface-raised: #ffffff;
+  --color-border: #e1e3ec;
+  --color-border-strong: #cdd0dd;
 
-  --color-text: #3f3f46;
-  --color-text-heading: #17171b;
-  --color-text-muted: #7a7a83;
+  --color-text: #43465a;
+  --color-text-heading: #14151c;
+  --color-text-muted: #767a8c;
 
-  --color-accent: #6d3bf0;
-  --color-accent-hover: #5c2fd6;
-  --color-accent-active: #4e27b8;
+  --color-accent: #5f74b0;
+  --color-accent-hover: #4f63a0;
+  --color-accent-active: #435590;
   --color-accent-contrast: #ffffff;
-  --color-accent-surface: rgba(109, 59, 240, 0.08);
-  --color-accent-ring: rgba(109, 59, 240, 0.35);
+  --color-accent-surface: rgba(95, 116, 176, 0.1);
+  --color-accent-ring: rgba(95, 116, 176, 0.35);
 
   --color-danger: #d6304a;
   --color-danger-surface: rgba(214, 48, 74, 0.08);
   --color-success: #1f9d55;
+
+  /* Section/status badge hues, sampled from the reference mockups: a muted
+     indigo ("verse") and a mustard/gold ("chorus"), each with a matching
+     translucent text tone for the light theme. */
+  --color-badge-a-bg: rgba(76, 95, 138, 0.14);
+  --color-badge-a-text: #3d4f7d;
+  --color-badge-b-bg: rgba(138, 109, 47, 0.16);
+  --color-badge-b-text: #7a5f22;
+  --color-badge-neutral-bg: #eceef4;
+  --color-badge-neutral-text: #565a6e;
 
   --shadow-sm: 0 1px 2px rgba(20, 20, 30, 0.06), 0 1px 1px rgba(20, 20, 30, 0.04);
   --shadow-md: 0 6px 16px rgba(20, 20, 30, 0.08), 0 2px 6px rgba(20, 20, 30, 0.06);
@@ -28,10 +41,13 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
 
   --transition-fast: 130ms ease;
 
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sans:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --heading: var(--sans);
   --mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 
@@ -60,26 +76,44 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #101014;
-    --color-surface: #18181e;
-    --color-surface-alt: #1e1e26;
-    --color-border: #2c2c35;
-    --color-border-strong: #3a3a45;
+    /* ---- Design tokens: dark theme ----
+       Sampled directly from the reference mockups. Page background and the
+       three named text colors are exact pixel values from the mockup;
+       everything else (surfaces, borders, muted text, accent) is sampled
+       to match. */
+    --color-bg: #0a0a0f;
+    --color-surface: #141419;
+    --color-surface-alt: #1b1b22;
+    --color-surface-raised: #17171d;
+    --color-border: #232330;
+    --color-border-strong: #34343f;
 
-    --color-text: #c7c7d1;
+    --color-text: #c7c8d3;
     --color-text-heading: #f5f5f7;
-    --color-text-muted: #8b8b96;
+    --color-text-muted: #8b8b98;
 
-    --color-accent: #a389f5;
-    --color-accent-hover: #b39dfb;
-    --color-accent-active: #8f74e8;
-    --color-accent-contrast: #14101f;
-    --color-accent-surface: rgba(163, 137, 245, 0.14);
-    --color-accent-ring: rgba(163, 137, 245, 0.4);
+    /* Muted periwinkle/indigo primary - the "+ New Song" button / selected
+       states / focus rings hue throughout the mockups. */
+    --color-accent: #7c8fc4;
+    --color-accent-hover: #91a2d0;
+    --color-accent-active: #6a7bb0;
+    --color-accent-contrast: #12131c;
+    --color-accent-surface: rgba(124, 143, 196, 0.16);
+    --color-accent-ring: rgba(124, 143, 196, 0.4);
 
     --color-danger: #ff6b81;
     --color-danger-surface: rgba(255, 107, 129, 0.12);
     --color-success: #4ade80;
+
+    /* Section badge hues ("verse" indigo / "chorus" mustard) from the Slide
+       Edit mockups, reused generically (this app doesn't classify slides,
+       so these back neutral per-slide badges instead - see SlideList). */
+    --color-badge-a-bg: #3f4d72;
+    --color-badge-a-text: #c9d2ef;
+    --color-badge-b-bg: #7a5f22;
+    --color-badge-b-text: #f3dfa8;
+    --color-badge-neutral-bg: #1f1f28;
+    --color-badge-neutral-text: #a9aab8;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
@@ -95,7 +129,7 @@
 
 #root {
   width: 100%;
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
   text-align: left;
   min-height: 100svh;
@@ -106,6 +140,7 @@
 
 body {
   margin: 0;
+  background: var(--color-bg);
 }
 
 h1,
@@ -127,6 +162,15 @@ h2 {
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0 0 4px;
+}
+
+h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
 }
 
 p {
@@ -168,12 +212,13 @@ textarea {
 input[type='text'],
 input[type='number'],
 input[type='file'],
+input[type='search'],
 textarea,
 select {
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -186,13 +231,15 @@ textarea {
 
 input[type='text']:hover,
 input[type='number']:hover,
+input[type='search']:hover,
 textarea:hover,
 select:hover {
-  border-color: var(--color-border-strong);
+  border-color: var(--color-accent);
 }
 
 input[type='text']:focus-visible,
 input[type='number']:focus-visible,
+input[type='search']:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 input[type='file']:focus-visible {
@@ -201,13 +248,22 @@ input[type='file']:focus-visible {
   box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
+/* ---- Buttons ----
+   Base = secondary/ghost style (matches the mockups' Export/Delete/nav
+   buttons: subtle border, transparent-ish fill). `.btn-primary` (and the
+   handful of structural selectors elsewhere that promote a button to the
+   primary action) layer the solid periwinkle treatment on top. */
 button {
-  background: var(--color-surface);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-alt);
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: 8px 14px;
   font-weight: 600;
   font-size: 0.85rem;
+  color: var(--color-text);
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
@@ -235,6 +291,228 @@ button:focus-visible {
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent-contrast) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover) !important;
+  border-color: var(--color-accent-hover) !important;
+  color: var(--color-accent-contrast) !important;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-danger {
+  color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+  background: var(--color-danger-surface) !important;
+}
+
+.btn-danger:hover:not(:disabled) {
+  box-shadow: 0 0 0 3px var(--color-danger-surface);
+}
+
+.btn-ghost {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-alt) !important;
+}
+
+/* ---- Badges / pills ---- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--color-badge-neutral-bg);
+  color: var(--color-badge-neutral-text);
+  white-space: nowrap;
+}
+
+.badge--a {
+  background: var(--color-badge-a-bg);
+  color: var(--color-badge-a-text);
+}
+
+.badge--b {
+  background: var(--color-badge-b-bg);
+  color: var(--color-badge-b-text);
+}
+
+.badge--outline {
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-muted);
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* ---- Toggle switch (input[type=checkbox].switch) ---- */
+
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.switch:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.switch:checked::before {
+  transform: translateX(16px);
+  background: var(--color-accent-contrast);
+}
+
+.switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}
+
+/* ---- Range sliders ---- */
+
+input[type='range'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0%,
+    var(--color-accent) var(--range-fill, 50%),
+    var(--color-surface-alt) var(--range-fill, 50%),
+    var(--color-surface-alt) 100%
+  );
+  outline: none;
+  padding: 0;
+  border: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent-contrast);
+  border: 3px solid var(--color-accent);
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent-contrast);
+  border: 3px solid var(--color-accent);
+  cursor: pointer;
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+}
+
+/* ---- Color swatch input ---- */
+
+input[type='color'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+/* ---- Segmented tab control (STYLE panel tabs, alignment buttons, etc.) ---- */
+
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.segmented__item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-md) - 3px);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.segmented__item:hover:not(:disabled) {
+  color: var(--color-text-heading);
+  border-color: transparent;
+}
+
+.segmented__item[aria-selected='true'],
+.segmented__item[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-text-heading);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 1024px) {

@@ -1,16 +1,21 @@
-# Lyrics → ProPresenter 6 Slide Builder
+# Verse2Slide
 
-A browser-based tool that turns pasted song lyrics into ProPresenter 6 (`.pro6`) slide decks: paste or upload lyrics, auto-split them into slides, fine-tune spacing/positioning per slide, add an auto-translated (and manually overridable) line in the language of your choice, and export a real `.pro6` file. Everything runs client-side — no backend, no accounts, no server.
+A browser-based tool that turns pasted song lyrics into ProPresenter 6 (`.pro6`) slide decks: paste or upload lyrics, auto-split them into slides, fine-tune spacing/positioning/color per slide, add an auto-translated (and manually overridable) line in the language of your choice, and export a real `.pro6` file. Everything runs client-side — no backend, no accounts, no server.
 
 ## Features
 
+- **Home / song list** — a landing page with search, sort (recently edited / title), grid/list view, and multi-select bulk delete over your locally saved songs.
 - **Import** — paste lyrics or upload a plain `.txt` file.
-- **Auto-split** — lyrics are chunked into slides using a configurable fixed number of lines per slide (blank lines are skipped, not turned into empty slides).
+- **Auto-split** — lyrics are chunked into slides using a configurable fixed number of lines per slide (blank lines are skipped, not turned into empty slides); adjustable live from the editor without leaving the page.
 - **Slide editing** — reorder (drag & drop), merge, split, and delete slides; edit text directly.
-- **Spacing controls** — per-slide font size, line spacing, vertical alignment, and text-box position/size, with a live 16:9 preview.
+- **Style panel** — a tabbed Layout / Type / Colors / Quality panel per slide: vertical alignment and text-box position, font family/size/weight and line spacing, and text/background color pickers, all with a live 16:9 preview.
+- **Quick Edit** — bulk-apply a Top/Center/Bottom placement to every slide's main or translation text at once, with an option to clamp the translation box directly beneath the main text box instead of moving independently.
 - **Translation** — pick a target language and auto-translate each slide via the free MyMemory API; any slide's translation can be manually edited, and manual edits are protected from being overwritten by a later bulk re-translate.
-- **Export** — download a real ProPresenter 6 `.pro6` XML file (RTF-encoded text, correct slide/group structure).
-- **Local persistence** — songs autosave to the browser's IndexedDB; a Saved Songs panel lets you create, load, and delete songs. No account or server required.
+- **Export** — download a real ProPresenter 6 `.pro6` XML file (RTF-encoded text, correct slide/group structure, transparent text-box fill by default — verified against a real ProPresenter 6 file).
+- **Local persistence** — songs autosave to the browser's IndexedDB, plus a manual Save button; a Saved Songs panel lets you create, load, and delete songs. No account or server required.
+- **Light/dark theme** — follows the OS/browser's `prefers-color-scheme` automatically; no manual switcher.
+
+See [`TODO.md`](TODO.md) for what's intentionally not built yet (and why), and [`docs/design-reference/`](docs/design-reference/) for the mockups the current visual design is based on.
 
 ## Tech stack
 
@@ -49,9 +54,21 @@ src/
     translation/ Translation provider abstraction + MyMemory client
   storage/       IndexedDB persistence (song save/load/list/delete)
   state/         Zustand store (song, translation, and UI slices)
-  features/      UI: lyrics input, slide list, slide preview, slide editor,
-                 translation panel, export button, song manager
+  components/    Small shared UI primitives (icons)
+  features/
+    home/          Landing page + top nav (AppHeader)
+    song-manager/   Saved-songs list: search, sort, view toggle, multi-select
+    lyrics-input/   Paste/upload lyrics + split settings
+    slide-list/     Per-song slide list ("Sections")
+    slide-preview/  Live 16:9 canvas preview, with prev/next navigation
+    slide-editor/   Per-slide text editing + position/spacing controls
+    style-panel/    Tabbed Layout / Type / Colors / Quality panel
+    quick-edit/     Bulk placement across all slides
+    translation/    Language picker + per-slide translate/override
+    export/         .pro6 export/download
 e2e/             Playwright end-to-end specs
+docs/
+  design-reference/ Mockups the current visual design is based on
 ```
 
 ## Testing & CI

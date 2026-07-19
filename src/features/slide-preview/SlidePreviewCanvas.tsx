@@ -4,6 +4,7 @@ import { useAppStore } from '../../state/store'
 import type { RGBAColor, Slide, TextElementState, VerticalAlignment } from '../../types/song'
 import { CANVAS_WIDTH } from '../../types/song'
 import { pixelToPercent } from './previewGeometry'
+import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons'
 
 // Standard 96dpi pt->px conversion, used only to approximate relative font
 // sizing in the preview — this is explicitly not pixel-exact.
@@ -78,6 +79,7 @@ function EmptyCanvas() {
 export function SlidePreviewCanvas() {
   const song = useAppStore((s) => s.song)
   const selectedSlideId = useAppStore((s) => s.selectedSlideId)
+  const selectSlide = useAppStore((s) => s.selectSlide)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [renderedWidth, setRenderedWidth] = useState(FALLBACK_RENDERED_WIDTH)
@@ -101,9 +103,11 @@ export function SlidePreviewCanvas() {
   }, [])
 
   let slide: Slide | undefined
+  let orderedIds: string[] = []
+  let slideIndex = -1
   if (song && song.slides.length > 0) {
     const group = song.groups[0]
-    const orderedIds = group ? group.slideIds : song.slides.map((s) => s.id)
+    orderedIds = group ? group.slideIds : song.slides.map((s) => s.id)
     const slidesById = new Map(song.slides.map((s) => [s.id, s]))
 
     slide = selectedSlideId ? slidesById.get(selectedSlideId) : undefined
@@ -111,9 +115,18 @@ export function SlidePreviewCanvas() {
       const firstId = orderedIds[0]
       slide = slidesById.get(firstId) ?? song.slides[0]
     }
+    slideIndex = slide ? orderedIds.indexOf(slide.id) : -1
   }
 
   const scale = renderedWidth / CANVAS_WIDTH
+  const displayLabel = slide && slide.label.trim().length > 0 ? slide.label : slide ? `Slide ${slideIndex + 1}` : ''
+
+  const goToOffset = (offset: number) => {
+    if (slideIndex === -1) return
+    const nextIndex = slideIndex + offset
+    if (nextIndex < 0 || nextIndex >= orderedIds.length) return
+    selectSlide(orderedIds[nextIndex])
+  }
 
   return (
     <section aria-labelledby="slide-preview-heading">
@@ -125,6 +138,7 @@ export function SlidePreviewCanvas() {
         ) : (
           <div
             data-testid="slide-preview-canvas"
+            className="slide-preview-canvas"
             style={{
               position: 'relative',
               aspectRatio: '16 / 9',
@@ -144,9 +158,36 @@ export function SlidePreviewCanvas() {
                 {slide.translationText.plainText}
               </div>
             )}
+            <span className="slide-preview-canvas__label">{displayLabel}</span>
           </div>
         )}
       </div>
+
+      {slide && orderedIds.length > 0 && (
+        <div className="slide-preview__nav">
+          <button
+            type="button"
+            className="slide-preview__nav-btn"
+            aria-label="Previous slide"
+            onClick={() => goToOffset(-1)}
+            disabled={slideIndex <= 0}
+          >
+            <ChevronLeftIcon />
+          </button>
+          <span className="slide-preview__counter">
+            {slideIndex + 1} / {orderedIds.length}
+          </span>
+          <button
+            type="button"
+            className="slide-preview__nav-btn"
+            aria-label="Next slide"
+            onClick={() => goToOffset(1)}
+            disabled={slideIndex === -1 || slideIndex >= orderedIds.length - 1}
+          >
+            <ChevronRightIcon />
+          </button>
+        </div>
+      )}
 
       <p>
         <small>Preview is an approximation — actual ProPresenter rendering may vary.</small>

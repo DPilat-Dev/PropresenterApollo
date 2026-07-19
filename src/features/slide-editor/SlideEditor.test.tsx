@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAppStore } from '../../state/store'
@@ -91,16 +91,5 @@ describe('SlideEditor', () => {
     expect(cacheKey).toBeDefined()
     expect(useAppStore.getState().cache[cacheKey!].overridden).toBe(true)
     expect(useAppStore.getState().cache[cacheKey!].translatedText).toBe('manual override')
-  })
-
-  it('changing the main font size calls updateSlideStyle with the new fontSizePt', () => {
-    const slideId = selectFirstSlide()
-    render(<SlideEditor />)
-
-    const fontSizeInput = screen.getByLabelText(/main text font size/i)
-    fireEvent.change(fontSizeInput, { target: { value: '80' } })
-
-    const slide = useAppStore.getState().song!.slides.find((s) => s.id === slideId)!
-    expect(slide.mainText.style.fontSizePt).toBe(80)
   })
 })

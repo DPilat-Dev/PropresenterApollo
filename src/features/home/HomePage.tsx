@@ -1,55 +1,44 @@
+import { useAppStore } from '../../state/store'
+import { AppHeader } from './AppHeader'
 import { SongManager } from '../song-manager/SongManager'
-
-const FEATURES: { title: string; description: string }[] = [
-  {
-    title: 'Import',
-    description: 'Paste or upload lyrics and they’re automatically split into slides.',
-  },
-  {
-    title: 'Edit & Align',
-    description: 'Fine-tune slide text, spacing, and vertical alignment slide by slide.',
-  },
-  {
-    title: 'Translate',
-    description: 'Auto-translate lyrics into a second language for bilingual slides.',
-  },
-  {
-    title: 'Export',
-    description: 'Download a real .pro6 file, ready to import straight into ProPresenter 6.',
-  },
-]
+import { PlusIcon } from '../../components/icons'
 
 /**
- * Landing view shown when there is no active song in the store. Introduces
- * the tool and hands off to the existing `SongManager` panel (unmodified)
- * for both starting a new song and resuming a previously saved one, so this
- * component doesn't duplicate any IndexedDB or store-creation logic.
+ * Landing view shown when there is no active song in the store: a top nav
+ * (AppHeader), a hero banner introducing this tool (this app's own copy -
+ * not the visual reference mockup's), and the song list/management panel
+ * (SongManager) below it.
  */
 export function HomePage() {
+  const handleHeroNewSong = () => {
+    useAppStore.getState().newSong('Untitled Song')
+  }
+
   return (
     <div className="home-page">
-      <section className="home-hero" aria-labelledby="home-hero-heading">
-        <h1 id="home-hero-heading">Lyrics → ProPresenter 6</h1>
-        <p className="home-hero__tagline">
-          Paste in song lyrics, auto-split them into slides, tweak the spacing and alignment, optionally
-          auto-translate, and export a real ProPresenter 6 (.pro6) file — all in your browser. No account,
-          no server, no upload.
-        </p>
-      </section>
+      <AppHeader />
 
-      <section className="home-features" aria-labelledby="home-features-heading">
-        <h2 id="home-features-heading">How it works</h2>
-        <ul className="home-features__list">
-          {FEATURES.map((feature) => (
-            <li key={feature.title}>
-              <strong>{feature.title}</strong>
-              <span>{feature.description}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="home-page__content">
+        <section className="home-hero" aria-labelledby="home-hero-heading">
+          <h1 id="home-hero-heading">Turn lyrics into ProPresenter slides.</h1>
+          <p className="home-hero__tagline">
+            Paste in song lyrics, split them into slides, fine-tune spacing and alignment, optionally
+            auto-translate, and export a real ProPresenter 6 (.pro6) file — all in your browser. No account,
+            no server, no upload.
+          </p>
+          <button
+            type="button"
+            className="btn-primary home-hero__cta"
+            onClick={handleHeroNewSong}
+            data-testid="hero-new-song-button"
+          >
+            <PlusIcon width={14} height={14} />
+            New Song
+          </button>
+        </section>
 
-      <SongManager />
+        <SongManager />
+      </div>
     </div>
   )
 }

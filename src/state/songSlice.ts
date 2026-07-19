@@ -237,6 +237,18 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     set({ song: updateElement(song, slideId, role, (el) => ({ ...el, verticalAlignment })) })
   },
 
+  updateSlideBackgroundColor: (slideId, backgroundColor) => {
+    const song = get().song
+    if (!song) return
+    set({
+      song: {
+        ...song,
+        updatedAt: nowIso(),
+        slides: song.slides.map((slide) => (slide.id === slideId ? { ...slide, backgroundColor } : slide)),
+      },
+    })
+  },
+
   updateAllSlidesPlacement: (role, zone) => {
     const song = get().song
     if (!song) return

@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand'
-import type { Song, TextStyle, Rect3D, VerticalAlignment } from '../types/song'
+import type { RGBAColor, Song, TextStyle, Rect3D, VerticalAlignment } from '../types/song'
 import type { TranslationProvider } from '../lib/translation/types'
 import type { TranslationCache } from '../types/song'
 
@@ -14,6 +14,7 @@ export interface SongSlice {
   updateSlideStyle: (slideId: string, role: TextRole, style: Partial<TextStyle>) => void
   updateSlidePosition: (slideId: string, role: TextRole, position: Rect3D) => void
   updateSlideVerticalAlignment: (slideId: string, role: TextRole, alignment: VerticalAlignment) => void
+  updateSlideBackgroundColor: (slideId: string, color: RGBAColor) => void
   updateAllSlidesPlacement: (role: TextRole, zone: VerticalAlignment) => void
   updateAllSlidesPlacementClamped: (zone: VerticalAlignment) => void
   reorderSlides: (orderedSlideIds: string[]) => void

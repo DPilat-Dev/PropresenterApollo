@@ -56,19 +56,15 @@ describe('HomePage', () => {
   it('renders the landing content describing the tool when no song is loaded', async () => {
     render(<HomePage />)
 
-    expect(screen.getByRole('heading', { name: /lyrics.*propresenter/i })).toBeInTheDocument()
-    expect(screen.getByText(/auto-split them into slides/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /how it works/i })).toBeInTheDocument()
-    expect(screen.getByText('Import')).toBeInTheDocument()
-    expect(screen.getByText('Edit & Align')).toBeInTheDocument()
-    expect(screen.getByText('Translate')).toBeInTheDocument()
-    expect(screen.getByText('Export')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /propresenter/i })).toBeInTheDocument()
+    expect(screen.getByText(/paste in song lyrics/i)).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: /primary/i })).toBeInTheDocument()
 
-    // Saved-songs panel is reused as-is.
-    expect(await screen.findByRole('heading', { name: /saved songs/i })).toBeInTheDocument()
+    // Song list panel is reused as-is.
+    expect(await screen.findByRole('heading', { name: /your songs/i })).toBeInTheDocument()
   })
 
-  it('creating a new song from the home view puts a song in the store', async () => {
+  it('creating a new song from the inline form puts a song in the store', async () => {
     const user = userEvent.setup()
     render(<HomePage />)
     await waitFor(() => expect(listSongsMock).toHaveBeenCalledTimes(1))
@@ -81,6 +77,16 @@ describe('HomePage', () => {
 
     expect(useAppStore.getState().song).not.toBeNull()
     expect(useAppStore.getState().song!.title).toBe('Brand New Song')
+  })
+
+  it('the hero "New Song" button creates a song immediately (no title prompt)', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+
+    await user.click(screen.getByTestId('hero-new-song-button'))
+
+    expect(useAppStore.getState().song).not.toBeNull()
+    expect(useAppStore.getState().song!.title).toBe('Untitled Song')
   })
 
   it('loading a saved song from the home view puts that song in the store', async () => {
@@ -100,7 +106,7 @@ describe('HomePage', () => {
     await waitFor(() => expect(useAppStore.getState().song?.id).toBe('song-xyz'))
   })
 
-  it('surfaces a StorageError from the reused saved-songs list instead of crashing', async () => {
+  it('surfaces a StorageError from the reused song list instead of crashing', async () => {
     listSongsMock.mockRejectedValue(new StorageError('boom'))
 
     render(<HomePage />)
