@@ -69,7 +69,6 @@ function App() {
           <SongManager />
           <LyricsInput />
           <SlideList />
-          <QuickEditPanel />
         </aside>
 
         <main className="app-main">
@@ -77,6 +76,10 @@ function App() {
           <SlideEditor />
           <TranslationPanel />
         </main>
+
+        <aside className="app-quick-edit-rail">
+          <QuickEditPanel />
+        </aside>
       </div>
     </div>
   )

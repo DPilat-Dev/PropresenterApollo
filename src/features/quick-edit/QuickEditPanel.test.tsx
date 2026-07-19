@@ -83,6 +83,84 @@ describe('QuickEditPanel', () => {
     expect(updatedSecond.translationText).toBeNull()
   })
 
+  it('does not render the clamp checkbox when no slide has translation text', () => {
+    importTwoSlides()
+    render(<QuickEditPanel />)
+    expect(screen.queryByLabelText(/clamp translation under main text/i)).not.toBeInTheDocument()
+  })
+
+  it('renders the clamp checkbox when at least one slide has translation text', () => {
+    const song = importTwoSlides()
+    useAppStore.getState().updateSlideText(song.slides[0].id, 'translation', 'traducido')
+    render(<QuickEditPanel />)
+    expect(screen.getByLabelText(/clamp translation under main text/i)).toBeInTheDocument()
+  })
+
+  it('with the clamp checkbox unchecked (default), selecting Main alignment only moves mainText', async () => {
+    const song = importTwoSlides()
+    const [firstSlide, secondSlide] = song.slides
+    useAppStore.getState().updateSlideText(firstSlide.id, 'translation', 'traducido')
+    const originalTranslationPosition = { ...useAppStore.getState().song!.slides[0].translationText!.position }
+
+    const user = userEvent.setup()
+    render(<QuickEditPanel />)
+
+    const select = screen.getByLabelText(/main text vertical alignment for all slides/i)
+    await user.selectOptions(select, 'top')
+
+    const updated = useAppStore.getState().song!
+    expect(updated.slides.find((s) => s.id === firstSlide.id)!.mainText.verticalAlignment).toBe('top')
+    expect(updated.slides.find((s) => s.id === firstSlide.id)!.translationText!.position).toEqual(
+      originalTranslationPosition,
+    )
+    expect(updated.slides.find((s) => s.id === secondSlide.id)!.mainText.verticalAlignment).toBe('top')
+  })
+
+  it('with the clamp checkbox checked, selecting a Main alignment moves both mainText and translationText for slides with translation, and only mainText otherwise', async () => {
+    const song = importTwoSlides()
+    const [firstSlide, secondSlide] = song.slides
+    useAppStore.getState().updateSlideText(firstSlide.id, 'translation', 'traducido')
+    expect(useAppStore.getState().song!.slides.find((s) => s.id === secondSlide.id)!.translationText).toBeNull()
+
+    const user = userEvent.setup()
+    render(<QuickEditPanel />)
+
+    await user.click(screen.getByLabelText(/clamp translation under main text/i))
+
+    // The independent translation row is hidden once clamping is enabled.
+    expect(screen.queryByLabelText(/translation text vertical alignment for all slides/i)).not.toBeInTheDocument()
+
+    const select = screen.getByLabelText(/main text vertical alignment for all slides/i)
+    await user.selectOptions(select, 'top')
+
+    const updated = useAppStore.getState().song!
+    const updatedFirst = updated.slides.find((s) => s.id === firstSlide.id)!
+    const updatedSecond = updated.slides.find((s) => s.id === secondSlide.id)!
+
+    expect(updatedFirst.mainText.verticalAlignment).toBe('top')
+    expect(updatedFirst.translationText).not.toBeNull()
+    expect(updatedFirst.translationText!.verticalAlignment).toBe('top')
+    // Translation sits directly beneath main with the expected gap, not overlapping.
+    expect(updatedFirst.translationText!.position.y).toBeGreaterThan(
+      updatedFirst.mainText.position.y + updatedFirst.mainText.position.height,
+    )
+
+    expect(updatedSecond.mainText.verticalAlignment).toBe('top')
+    expect(updatedSecond.translationText).toBeNull()
+  })
+
+  it('translation select row is not present in the DOM when the clamp checkbox is checked', async () => {
+    const song = importTwoSlides()
+    useAppStore.getState().updateSlideText(song.slides[0].id, 'translation', 'traducido')
+
+    const user = userEvent.setup()
+    render(<QuickEditPanel />)
+
+    expect(screen.getByLabelText(/translation text vertical alignment for all slides/i)).toBeInTheDocument()
+    await user.click(screen.getByLabelText(/clamp translation under main text/i))
+    expect(screen.queryByLabelText(/translation text vertical alignment for all slides/i)).not.toBeInTheDocument()
+  })
+
   it('re-selecting the same alignment option twice in a row re-applies it (uncontrolled trigger, not a bound value)', async () => {
     importTwoSlides()
     useAppStore.getState().updateAllSlidesPlacement('main', 'bottom')

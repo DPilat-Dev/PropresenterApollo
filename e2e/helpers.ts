@@ -88,3 +88,30 @@ export function slideListItems(page: Page) {
 export async function selectSlideAt(page: Page, index: number): Promise<void> {
   await slideListItems(page).nth(index).locator('span').first().click()
 }
+
+/**
+ * Mocks the MyMemory translation endpoint (see translation.spec.ts) and drives the
+ * Translation panel to translate the currently-selected slide, leaving it with a
+ * non-null `translationText`. Must be called after a slide is selected via
+ * `selectSlideAt`. Returns the mocked translated text.
+ */
+export async function translateSelectedSlide(page: Page, translatedText = 'TEXTO TRADUCIDO DE PRUEBA'): Promise<string> {
+  await page.route('https://api.mymemory.translated.net/get*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        responseData: { translatedText, match: 1 },
+        responseStatus: 200,
+      }),
+    })
+  })
+
+  await page.locator('#translation-target-language').selectOption('es')
+  await page.getByRole('button', { name: /translate this slide/i }).click()
+
+  const translationTextarea = page.getByLabel('Translation text', { exact: true })
+  await expect(translationTextarea).toHaveValue(translatedText, { timeout: 15_000 })
+
+  return translatedText
+}

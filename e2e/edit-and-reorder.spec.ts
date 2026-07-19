@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test'
-import { expectNoConsoleErrors, generateSlides, selectSlideAt, slideListItems, trackPageErrors } from './helpers'
+import {
+  expectNoConsoleErrors,
+  generateSlides,
+  selectSlideAt,
+  slideListItems,
+  trackPageErrors,
+  translateSelectedSlide,
+} from './helpers'
 
 test.describe('edit slide and preview wiring', () => {
   test('selecting a slide shows it in the preview, and editing main text updates both the list and preview', async ({
@@ -92,6 +99,41 @@ test.describe('edit slide and preview wiring', () => {
     await selectSlideAt(page, 1)
     await expect(perSlideAlignment).toHaveValue('center')
     await expect(perSlideY).toHaveValue('390')
+
+    expectNoConsoleErrors(errors)
+  })
+
+  test('Quick Edit "clamp translation under main text" moves both boxes together as one stacked unit', async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page)
+    await page.goto('/')
+
+    await generateSlides(page, 'First slide line one\nFirst slide line two\n\nSecond slide line one\nSecond slide line two')
+
+    await selectSlideAt(page, 0)
+    await translateSelectedSlide(page)
+
+    const mainY = page.getByLabel('Main text position y', { exact: true })
+    const translationY = page.getByLabel('Translation text position y', { exact: true })
+    const mainHeight = Number(await page.getByLabel('Main text height', { exact: true }).inputValue())
+
+    await page.getByLabel(/clamp translation under main text/i).check()
+
+    // Checking the box hides the independent Translation text quick-edit row.
+    await expect(page.getByLabel('Translation text vertical alignment for all slides')).not.toBeVisible()
+
+    await page.getByLabel('Main text vertical alignment for all slides').selectOption('center')
+
+    // combinedHeight = mainHeight(300) + CLAMP_GAP(20) + translationHeight(160) = 480
+    // blockTop = (1080 - 480) / 2 = 300; mainY = 300; translationY = 300 + 300 + 20 = 620
+    await expect(mainY).toHaveValue('300')
+    await expect(translationY).toHaveValue('620')
+
+    const mainYValue = Number(await mainY.inputValue())
+    const translationYValue = Number(await translationY.inputValue())
+    // The two boxes must not overlap: translation starts strictly after main ends.
+    expect(translationYValue).toBeGreaterThan(mainYValue + mainHeight)
 
     expectNoConsoleErrors(errors)
   })

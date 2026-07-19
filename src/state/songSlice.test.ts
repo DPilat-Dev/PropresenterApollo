@@ -216,6 +216,121 @@ describe('songSlice via useAppStore', () => {
     })
   })
 
+  describe('updateAllSlidesPlacementClamped', () => {
+    const CLAMP_GAP = 20
+    const PLACEMENT_MARGIN = 40
+
+    it('stacks main+translation as one unit at the top, with the correct gap between them', () => {
+      useAppStore.getState().importLyrics('a\nb', 2)
+      const slideId = useAppStore.getState().song!.slides[0].id
+      useAppStore.getState().updateSlideText(slideId, 'translation', 'hola')
+
+      const before = useAppStore.getState().song!.slides[0]
+      const mainHeight = before.mainText.position.height
+      const expectedMainY = PLACEMENT_MARGIN
+      const expectedTranslationY = expectedMainY + mainHeight + CLAMP_GAP
+
+      useAppStore.getState().updateAllSlidesPlacementClamped('top')
+      const slide = useAppStore.getState().song!.slides[0]
+
+      expect(slide.mainText.verticalAlignment).toBe('top')
+      expect(slide.translationText!.verticalAlignment).toBe('top')
+      expect(slide.mainText.position.y).toBe(expectedMainY)
+      expect(slide.translationText!.position.y).toBe(expectedTranslationY)
+      expect(slide.translationText!.position.y - (slide.mainText.position.y + mainHeight)).toBe(CLAMP_GAP)
+    })
+
+    it('stacks main+translation as one unit at center, computed from CANVAS_HEIGHT and combined height', () => {
+      useAppStore.getState().importLyrics('a\nb', 2)
+      const slideId = useAppStore.getState().song!.slides[0].id
+      useAppStore.getState().updateSlideText(slideId, 'translation', 'hola')
+
+      const before = useAppStore.getState().song!.slides[0]
+      const mainHeight = before.mainText.position.height
+      const translationHeight = before.translationText!.position.height
+      const combinedHeight = mainHeight + CLAMP_GAP + translationHeight
+      const expectedBlockTop = (CANVAS_HEIGHT - combinedHeight) / 2
+      const expectedMainY = expectedBlockTop
+      const expectedTranslationY = expectedBlockTop + mainHeight + CLAMP_GAP
+
+      useAppStore.getState().updateAllSlidesPlacementClamped('center')
+      const slide = useAppStore.getState().song!.slides[0]
+
+      expect(slide.mainText.verticalAlignment).toBe('center')
+      expect(slide.translationText!.verticalAlignment).toBe('center')
+      expect(slide.mainText.position.y).toBe(expectedMainY)
+      expect(slide.translationText!.position.y).toBe(expectedTranslationY)
+      expect(slide.translationText!.position.y - (slide.mainText.position.y + mainHeight)).toBe(CLAMP_GAP)
+    })
+
+    it('stacks main+translation as one unit at the bottom, leaving PLACEMENT_MARGIN below the translation box', () => {
+      useAppStore.getState().importLyrics('a\nb', 2)
+      const slideId = useAppStore.getState().song!.slides[0].id
+      useAppStore.getState().updateSlideText(slideId, 'translation', 'hola')
+
+      const before = useAppStore.getState().song!.slides[0]
+      const mainHeight = before.mainText.position.height
+      const translationHeight = before.translationText!.position.height
+      const combinedHeight = mainHeight + CLAMP_GAP + translationHeight
+      const expectedBlockTop = CANVAS_HEIGHT - combinedHeight - PLACEMENT_MARGIN
+      const expectedMainY = expectedBlockTop
+      const expectedTranslationY = expectedBlockTop + mainHeight + CLAMP_GAP
+
+      useAppStore.getState().updateAllSlidesPlacementClamped('bottom')
+      const slide = useAppStore.getState().song!.slides[0]
+
+      expect(slide.mainText.position.y).toBe(expectedMainY)
+      expect(slide.translationText!.position.y).toBe(expectedTranslationY)
+      expect(slide.translationText!.position.y - (slide.mainText.position.y + mainHeight)).toBe(CLAMP_GAP)
+      // The bottom edge of the stacked unit sits exactly PLACEMENT_MARGIN above the canvas edge.
+      expect(slide.translationText!.position.y + translationHeight).toBe(CANVAS_HEIGHT - PLACEMENT_MARGIN)
+    })
+
+    it('leaves x/z/width/height unchanged on both boxes', () => {
+      useAppStore.getState().importLyrics('a\nb', 2)
+      const slideId = useAppStore.getState().song!.slides[0].id
+      useAppStore.getState().updateSlideText(slideId, 'translation', 'hola')
+
+      const before = useAppStore.getState().song!.slides[0]
+      const mainBefore = { ...before.mainText.position }
+      const translationBefore = { ...before.translationText!.position }
+
+      useAppStore.getState().updateAllSlidesPlacementClamped('center')
+      const after = useAppStore.getState().song!.slides[0]
+
+      expect(after.mainText.position.x).toBe(mainBefore.x)
+      expect(after.mainText.position.z).toBe(mainBefore.z)
+      expect(after.mainText.position.width).toBe(mainBefore.width)
+      expect(after.mainText.position.height).toBe(mainBefore.height)
+      expect(after.translationText!.position.x).toBe(translationBefore.x)
+      expect(after.translationText!.position.z).toBe(translationBefore.z)
+      expect(after.translationText!.position.width).toBe(translationBefore.width)
+      expect(after.translationText!.position.height).toBe(translationBefore.height)
+    })
+
+    it('behaves like the plain solo formula for a slide with no translation text', () => {
+      useAppStore.getState().importLyrics('a\nb\n\nc\nd', 2)
+      const before = useAppStore.getState().song!
+      expect(before.slides[0].translationText).toBeNull()
+      const mainHeight = before.slides[0].mainText.position.height
+
+      useAppStore.getState().updateAllSlidesPlacementClamped('bottom')
+      const slide = useAppStore.getState().song!.slides[0]
+
+      expect(slide.translationText).toBeNull()
+      expect(slide.mainText.verticalAlignment).toBe('bottom')
+      expect(slide.mainText.position.y).toBe(CANVAS_HEIGHT - mainHeight - PLACEMENT_MARGIN)
+    })
+
+    it('is a no-op and does not throw when song is null', () => {
+      expect(useAppStore.getState().song).toBeNull()
+      expect(() => {
+        useAppStore.getState().updateAllSlidesPlacementClamped('top')
+      }).not.toThrow()
+      expect(useAppStore.getState().song).toBeNull()
+    })
+  })
+
   describe('reorderSlides', () => {
     it('updates group.slideIds to match and updates each slide order field', () => {
       useAppStore.getState().importLyrics('a\nb\nc', 1)
@@ -305,6 +420,7 @@ describe('songSlice via useAppStore', () => {
         useAppStore.getState().updateSlidePosition('missing', 'main', { x: 0, y: 0, z: 0, width: 1, height: 1 })
         useAppStore.getState().updateSlideVerticalAlignment('missing', 'main', 'top')
         useAppStore.getState().updateAllSlidesPlacement('main', 'top')
+        useAppStore.getState().updateAllSlidesPlacementClamped('top')
         useAppStore.getState().reorderSlides(['a', 'b'])
         useAppStore.getState().mergeSlides(['a', 'b'])
         useAppStore.getState().splitSlideAtLine('missing', 1)

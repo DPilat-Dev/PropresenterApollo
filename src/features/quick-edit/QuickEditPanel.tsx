@@ -14,12 +14,18 @@ const ALIGNMENT_OPTIONS: ReadonlyArray<{ value: VerticalAlignment; label: string
  * `verticalAlignment` together so the text is anchored consistently within its
  * newly-placed box), instead of opening each slide individually via the
  * per-slide `SpacingControls`/`TextBoxPositionControl`. Self-contained - reads
- * `song` and the `updateAllSlidesPlacement` action directly from the store,
- * no props.
+ * `song` and the placement actions directly from the store, no props.
+ *
+ * The "clamp translation under main text" checkbox is local UI-only state (not
+ * persisted to the song): when checked, the Main text select drives BOTH boxes
+ * together via `updateAllSlidesPlacementClamped` (translation position is derived
+ * from main's placement, so the independent Translation text row is hidden -
+ * picking it separately wouldn't make sense once it's clamped).
  */
 export function QuickEditPanel() {
   const song = useAppStore((s) => s.song)
   const updateAllSlidesPlacement = useAppStore((s) => s.updateAllSlidesPlacement)
+  const updateAllSlidesPlacementClamped = useAppStore((s) => s.updateAllSlidesPlacementClamped)
 
   // These selects don't represent one "current" alignment shared by every slide
   // (slides may already differ from each other), so each is treated as an
@@ -29,6 +35,7 @@ export function QuickEditPanel() {
   // a row still dispatches a change event, which a value-bound select wouldn't do.
   const [mainKey, setMainKey] = useState(0)
   const [translationKey, setTranslationKey] = useState(0)
+  const [clampTranslation, setClampTranslation] = useState(false)
 
   if (!song || song.slides.length === 0) return null
 
@@ -36,7 +43,11 @@ export function QuickEditPanel() {
 
   const handleMainChange = (value: string) => {
     if (value === '') return
-    updateAllSlidesPlacement('main', value as VerticalAlignment)
+    if (clampTranslation && hasTranslation) {
+      updateAllSlidesPlacementClamped(value as VerticalAlignment)
+    } else {
+      updateAllSlidesPlacement('main', value as VerticalAlignment)
+    }
     setMainKey((k) => k + 1)
   }
 
@@ -70,6 +81,20 @@ export function QuickEditPanel() {
       </label>
 
       {hasTranslation && (
+        <div className="quick-edit-panel__clamp-row">
+          <label className="quick-edit-panel__checkbox-label">
+            <input
+              type="checkbox"
+              checked={clampTranslation}
+              onChange={(e) => setClampTranslation(e.target.checked)}
+            />
+            Clamp translation under main text
+          </label>
+          <p className="quick-edit-panel__hint">Keeps translation directly below main text when aligning.</p>
+        </div>
+      )}
+
+      {hasTranslation && !clampTranslation && (
         <div className="quick-edit-panel__translation-row">
           <label>
             Translation text

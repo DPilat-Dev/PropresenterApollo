@@ -16,6 +16,9 @@ import type { VerticalAlignment } from '../types/song'
 /** Margin (px) kept between the text box and the canvas edge for top/bottom placement. */
 const PLACEMENT_MARGIN = 40
 
+/** Gap (px) kept between the main and translation boxes when clamping translation under main text (matches the DEFAULT_MAIN_TEXT_POSITION/DEFAULT_TRANSLATION_TEXT_POSITION gap in types/song.ts). */
+const CLAMP_GAP = 20
+
 /** Computes the box's new top-left `y` for a given vertical zone, given that box's own height. */
 function verticalZoneY(zone: VerticalAlignment, height: number): number {
   switch (zone) {
@@ -128,6 +131,54 @@ function updateAllElements(
   }
 }
 
+/**
+ * Applies clamped bulk placement to every slide: main text always moves to `zone`
+ * solo (existing formula) when there's no translation text to clamp to. When a
+ * slide DOES have translation text, the main+translation boxes are treated as one
+ * stacked unit (main on top, `CLAMP_GAP` px gap, translation below) and the whole
+ * unit is placed at `zone` together, so the translation always sits directly under
+ * the main text instead of being positioned independently.
+ */
+function updateAllSlidesPlacementClampedSong(song: Song, zone: VerticalAlignment): Song {
+  return {
+    ...song,
+    updatedAt: nowIso(),
+    slides: song.slides.map((slide) => {
+      if (slide.translationText === null) {
+        return {
+          ...slide,
+          mainText: {
+            ...slide.mainText,
+            position: { ...slide.mainText.position, y: verticalZoneY(zone, slide.mainText.position.height) },
+            verticalAlignment: zone,
+          },
+        }
+      }
+
+      const mainHeight = slide.mainText.position.height
+      const translationHeight = slide.translationText.position.height
+      const combinedHeight = mainHeight + CLAMP_GAP + translationHeight
+      const blockTop = verticalZoneY(zone, combinedHeight)
+      const mainY = blockTop
+      const translationY = blockTop + mainHeight + CLAMP_GAP
+
+      return {
+        ...slide,
+        mainText: {
+          ...slide.mainText,
+          position: { ...slide.mainText.position, y: mainY },
+          verticalAlignment: zone,
+        },
+        translationText: {
+          ...slide.translationText,
+          position: { ...slide.translationText.position, y: translationY },
+          verticalAlignment: zone,
+        },
+      }
+    }),
+  }
+}
+
 export const createSongSlice: Slice<SongSlice> = (set, get) => ({
   song: null,
 
@@ -196,6 +247,12 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
         verticalAlignment: zone,
       })),
     })
+  },
+
+  updateAllSlidesPlacementClamped: (zone) => {
+    const song = get().song
+    if (!song) return
+    set({ song: updateAllSlidesPlacementClampedSong(song, zone) })
   },
 
   reorderSlides: (orderedSlideIds) => {
