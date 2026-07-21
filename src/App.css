@@ -946,6 +946,28 @@ section[aria-labelledby='lyrics-input-heading'] > button {
   margin-top: 8px;
 }
 
+/* "Applies to all slides" scope pill at the top of a tab / section. */
+.style-tab__scope {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  background: var(--color-accent-surface);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  margin: 0 0 14px;
+}
+
+/* When the scope pill sits under a section heading (not tab-level), tighten it. */
+.style-tab h3 + .style-tab__scope {
+  margin-top: 2px;
+}
+
 .style-panel__field {
   display: block;
   margin: 0 0 6px;

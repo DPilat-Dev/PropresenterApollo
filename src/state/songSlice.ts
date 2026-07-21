@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { Slide, SlideGroup, Song, TextElementState } from '../types/song'
 import {
   CANVAS_HEIGHT,
+  CANVAS_WIDTH,
   DEFAULT_FILL_COLOR,
   DEFAULT_MAIN_TEXT_POSITION,
   DEFAULT_MAIN_TEXT_STYLE,
@@ -333,6 +334,47 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
         slides: song.slides.map((slide) => (slide.id === slideId ? { ...slide, backgroundColor } : slide)),
       },
     })
+  },
+
+  updateAllSlidesBackgroundColor: (backgroundColor) => {
+    const song = get().song
+    if (!song) return
+    set({
+      song: {
+        ...song,
+        updatedAt: nowIso(),
+        slides: song.slides.map((slide) => ({ ...slide, backgroundColor })),
+      },
+    })
+  },
+
+  setAllSlidesHorizontalPadding: (padding) => {
+    const song = get().song
+    if (!song) return
+    const clamped = Math.max(0, Math.min(padding, Math.floor(CANVAS_WIDTH / 2) - 20))
+    const width = CANVAS_WIDTH - clamped * 2
+    const inset = (el: TextElementState): TextElementState => ({
+      ...el,
+      position: { ...el.position, x: clamped, width },
+    })
+    set({
+      song: {
+        ...song,
+        updatedAt: nowIso(),
+        slides: song.slides.map((slide) => ({
+          ...slide,
+          mainText: inset(slide.mainText),
+          translationText: slide.translationText === null ? null : inset(slide.translationText),
+        })),
+      },
+    })
+  },
+
+  setAllSlidesBoxHeight: (role, height) => {
+    const song = get().song
+    if (!song) return
+    const clamped = Math.max(40, Math.min(height, CANVAS_HEIGHT))
+    set({ song: updateAllElements(song, role, (el) => ({ ...el, position: { ...el.position, height: clamped } })) })
   },
 
   updateAllSlidesPlacement: (role, zone) => {

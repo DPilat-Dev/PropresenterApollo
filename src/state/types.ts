@@ -24,6 +24,12 @@ export interface SongSlice {
   updateSlidePosition: (slideId: string, role: TextRole, position: Rect3D) => void
   updateSlideVerticalAlignment: (slideId: string, role: TextRole, alignment: VerticalAlignment) => void
   updateSlideBackgroundColor: (slideId: string, color: RGBAColor) => void
+  updateAllSlidesBackgroundColor: (color: RGBAColor) => void
+  /** Sets a symmetric left/right inset (px) on every slide's text boxes, resizing
+   * their width to match the canvas minus twice the padding. */
+  setAllSlidesHorizontalPadding: (padding: number) => void
+  /** Sets the box height (px) for every slide's text box of the given role. */
+  setAllSlidesBoxHeight: (role: TextRole, height: number) => void
   updateAllSlidesPlacement: (role: TextRole, zone: VerticalAlignment) => void
   updateAllSlidesPlacementClamped: (zone: VerticalAlignment) => void
   reorderSlides: (orderedSlideIds: string[]) => void

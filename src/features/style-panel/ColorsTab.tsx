@@ -69,8 +69,8 @@ interface ColorsTabProps {
  */
 export function ColorsTab({ slide }: ColorsTabProps) {
   const song = useAppStore((s) => s.song)
-  const updateSlideStyle = useAppStore((s) => s.updateSlideStyle)
-  const updateSlideBackgroundColor = useAppStore((s) => s.updateSlideBackgroundColor)
+  const updateAllSlidesStyle = useAppStore((s) => s.updateAllSlidesStyle)
+  const updateAllSlidesBackgroundColor = useAppStore((s) => s.updateAllSlidesBackgroundColor)
   const setThirdLanguageColor = useAppStore((s) => s.setThirdLanguageColor)
   const setAllSlidesTextEffect = useAppStore((s) => s.setAllSlidesTextEffect)
 
@@ -81,19 +81,20 @@ export function ColorsTab({ slide }: ColorsTabProps) {
 
   return (
     <div className="style-tab" data-testid="colors-tab">
+      <p className="style-tab__scope">Applies to all slides</p>
       <h3>Text Colors</h3>
 
       <ColorField
         label="Original Text"
         color={slide.mainText.style.color}
-        onChange={(next) => updateSlideStyle(slide.id, 'main', { color: next })}
+        onChange={(next) => updateAllSlidesStyle('main', { color: next })}
       />
 
       {slide.translationText ? (
         <ColorField
           label="Translated Text"
           color={slide.translationText.style.color}
-          onChange={(next) => updateSlideStyle(slide.id, 'translation', { color: next })}
+          onChange={(next) => updateAllSlidesStyle('translation', { color: next })}
         />
       ) : (
         <div className="color-field-row color-field-row--muted">
@@ -113,7 +114,7 @@ export function ColorsTab({ slide }: ColorsTabProps) {
       <ColorField
         label="Background"
         color={slide.backgroundColor}
-        onChange={(next) => updateSlideBackgroundColor(slide.id, next)}
+        onChange={(next) => updateAllSlidesBackgroundColor(next)}
       />
 
       <h3 className="style-tab__section-label--spaced">Effects</h3>

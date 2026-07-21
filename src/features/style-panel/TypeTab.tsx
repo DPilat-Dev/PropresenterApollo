@@ -41,9 +41,13 @@ interface TypeTabProps {
   role: TextRole
 }
 
-/** STYLE panel "Type" tab: typography controls for the active text role. */
+/**
+ * STYLE panel "Type" tab: typography controls for the active text role. Edits
+ * apply to *every* slide's text of that role (song-wide styling), reading the
+ * selected slide as the representative current value.
+ */
 export function TypeTab({ slide, role }: TypeTabProps) {
-  const updateSlideStyle = useAppStore((s) => s.updateSlideStyle)
+  const updateAllSlidesStyle = useAppStore((s) => s.updateAllSlidesStyle)
   const element = role === 'main' ? slide.mainText : slide.translationText
   const label = role === 'main' ? 'Main text' : 'Translation text'
 
@@ -61,11 +65,12 @@ export function TypeTab({ slide, role }: TypeTabProps) {
 
   return (
     <div className="style-tab" data-testid="type-tab">
+      <p className="style-tab__scope">Applies to all slides</p>
       <h3>Font Family</h3>
       <select
         aria-label={`${label} font family`}
         value={element.style.fontFamily}
-        onChange={(e) => updateSlideStyle(slide.id, role, { fontFamily: e.target.value })}
+        onChange={(e) => updateAllSlidesStyle(role, { fontFamily: e.target.value })}
       >
         {familyOptions.map((family) => (
           <option key={family} value={family}>
@@ -83,14 +88,14 @@ export function TypeTab({ slide, role }: TypeTabProps) {
         step={1}
         value={fontSize}
         style={{ '--range-fill': `${fillPercent(fontSize, MIN_FONT_SIZE, MAX_FONT_SIZE)}%` } as CSSProperties}
-        onChange={(e) => updateSlideStyle(slide.id, role, { fontSizePt: Number(e.target.value) })}
+        onChange={(e) => updateAllSlidesStyle(role, { fontSizePt: Number(e.target.value) })}
       />
 
       <h3 className="style-tab__section-label--spaced">Font Weight</h3>
       <select
         aria-label={`${label} font weight`}
         value={element.style.bold ? 'bold' : 'regular'}
-        onChange={(e) => updateSlideStyle(slide.id, role, { bold: e.target.value === 'bold' })}
+        onChange={(e) => updateAllSlidesStyle(role, { bold: e.target.value === 'bold' })}
       >
         <option value="regular">Regular</option>
         <option value="bold">Bold</option>
@@ -105,7 +110,7 @@ export function TypeTab({ slide, role }: TypeTabProps) {
             className="segmented__item"
             aria-label={alignLabel}
             aria-pressed={activeAlign === value}
-            onClick={() => updateSlideStyle(slide.id, role, { align: value })}
+            onClick={() => updateAllSlidesStyle(role, { align: value })}
           >
             <Icon />
           </button>
@@ -121,7 +126,7 @@ export function TypeTab({ slide, role }: TypeTabProps) {
         step={10}
         value={lineHeightPct}
         style={{ '--range-fill': `${fillPercent(lineHeightPct, MIN_LINE_HEIGHT, MAX_LINE_HEIGHT)}%` } as CSSProperties}
-        onChange={(e) => updateSlideStyle(slide.id, role, { lineSpacingPct: Number(e.target.value) })}
+        onChange={(e) => updateAllSlidesStyle(role, { lineSpacingPct: Number(e.target.value) })}
       />
     </div>
   )
