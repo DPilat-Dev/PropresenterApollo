@@ -50,30 +50,66 @@ function createTextElement(role: TextRole, plainText: string): TextElementState 
   }
 }
 
-/** Re-sizes a main-text element's box to fit `lineCount` lines and centers it
- * vertically. Leaves x/width and everything else untouched. */
-function fitMainTextElement(el: TextElementState, lineCount: number): TextElementState {
-  const height = fitBoxHeight(lineCount, el.style.fontSizePt, el.style.lineSpacingPct)
+/** Number of lines in a text element's content (min 1). */
+function lineCountOf(el: TextElementState): number {
+  return Math.max(1, el.plainText.split('\n').length)
+}
+
+/**
+ * Auto-lays-out a slide's text boxes: sizes the main box to its line count and
+ * vertically centers it. When the slide also has translation text, the
+ * translation box is sized to its own line count and placed directly under the
+ * main box (a CLAMP_GAP gap between them), with the combined main+translation
+ * block centered vertically as a unit. Leaves x/width and styles untouched.
+ */
+function autoLayoutSlide(slide: Slide): Slide {
+  const mainHeight = fitBoxHeight(lineCountOf(slide.mainText), slide.mainText.style.fontSizePt, slide.mainText.style.lineSpacingPct)
+
+  if (slide.translationText === null) {
+    return {
+      ...slide,
+      mainText: {
+        ...slide.mainText,
+        position: { ...slide.mainText.position, y: centeredBoxY(mainHeight), height: mainHeight },
+        verticalAlignment: 'center',
+      },
+    }
+  }
+
+  const translationHeight = fitBoxHeight(
+    lineCountOf(slide.translationText),
+    slide.translationText.style.fontSizePt,
+    slide.translationText.style.lineSpacingPct,
+  )
+  const blockTop = centeredBoxY(mainHeight + CLAMP_GAP + translationHeight)
+
   return {
-    ...el,
-    position: { ...el.position, y: centeredBoxY(height), height },
-    verticalAlignment: 'center',
+    ...slide,
+    mainText: {
+      ...slide.mainText,
+      position: { ...slide.mainText.position, y: blockTop, height: mainHeight },
+      verticalAlignment: 'center',
+    },
+    translationText: {
+      ...slide.translationText,
+      position: { ...slide.translationText.position, y: blockTop + mainHeight + CLAMP_GAP, height: translationHeight },
+      verticalAlignment: 'center',
+    },
   }
 }
 
 function createSlideFromLines(lines: string[], order: number, label = '', autoFit = true): Slide {
-  let mainText = createTextElement('main', lines.join('\n'))
-  if (autoFit) mainText = fitMainTextElement(mainText, lines.length)
-  return {
+  const slide: Slide = {
     id: uuidv4(),
     label,
     notes: '',
     enabled: true,
     backgroundColor: { ...DEFAULT_SLIDE_BACKGROUND },
-    mainText,
+    mainText: createTextElement('main', lines.join('\n')),
     translationText: null,
     order,
   }
+  return autoFit ? autoLayoutSlide(slide) : slide
 }
 
 function nowIso(): string {
@@ -252,10 +288,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
       song: {
         ...song,
         updatedAt: nowIso(),
-        slides: song.slides.map((slide) => ({
-          ...slide,
-          mainText: fitMainTextElement(slide.mainText, slide.mainText.plainText.split('\n').length),
-        })),
+        slides: song.slides.map(autoLayoutSlide),
       },
     })
   },
@@ -264,12 +297,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     const song = get().song
     if (!song) return
     const next: Song = { ...song, autoFitBox: enabled, updatedAt: nowIso() }
-    if (enabled) {
-      next.slides = next.slides.map((slide) => ({
-        ...slide,
-        mainText: fitMainTextElement(slide.mainText, slide.mainText.plainText.split('\n').length),
-      }))
-    }
+    if (enabled) next.slides = next.slides.map(autoLayoutSlide)
     set({ song: next })
   },
 
@@ -348,7 +376,16 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
   updateSlideText: (slideId, role, plainText) => {
     const song = get().song
     if (!song) return
-    set({ song: updateElement(song, slideId, role, (el) => ({ ...el, plainText })) })
+    let updated = updateElement(song, slideId, role, (el) => ({ ...el, plainText }))
+    // Re-flow the affected slide so the box hugs its (possibly new) line count
+    // and a freshly-added translation lands directly under the main text.
+    if (updated.autoFitBox) {
+      updated = {
+        ...updated,
+        slides: updated.slides.map((s) => (s.id === slideId ? autoLayoutSlide(s) : s)),
+      }
+    }
+    set({ song: updated })
   },
 
   updateSlideStyle: (slideId, role, styleUpdate) => {

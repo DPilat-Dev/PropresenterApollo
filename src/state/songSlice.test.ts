@@ -75,7 +75,13 @@ describe('songSlice via useAppStore', () => {
 
       expect(slide.translationText).not.toBeNull()
       expect(slide.translationText!.plainText).toBe('hola')
-      expect(slide.translationText!.position).toEqual(DEFAULT_TRANSLATION_TEXT_POSITION)
+      // Auto-fit keeps the default x/width but re-flows the box directly under
+      // the main text (so it no longer equals DEFAULT_TRANSLATION_TEXT_POSITION).
+      expect(slide.translationText!.position.x).toBe(DEFAULT_TRANSLATION_TEXT_POSITION.x)
+      expect(slide.translationText!.position.width).toBe(DEFAULT_TRANSLATION_TEXT_POSITION.width)
+      expect(slide.translationText!.position.y).toBeGreaterThan(
+        slide.mainText.position.y + slide.mainText.position.height,
+      )
       expect(slide.translationText!.style).toEqual(DEFAULT_TRANSLATION_TEXT_STYLE)
       expect(slide.translationText!.role).toBe('translation')
       expect(slide.translationText!.fillColor).toEqual(DEFAULT_FILL_COLOR)

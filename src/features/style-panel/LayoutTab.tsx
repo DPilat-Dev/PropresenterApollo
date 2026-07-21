@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useAppStore } from '../../state/store'
 import { SLIDE_LAYOUT_PRESETS } from '../../types/song'
@@ -31,16 +32,34 @@ export function LayoutTab() {
   const importLyrics = useAppStore((s) => s.importLyrics)
   const setSongLayout = useAppStore((s) => s.setSongLayout)
   const setSongSourceLanguage = useAppStore((s) => s.setSongSourceLanguage)
+  const targetLanguage = useAppStore((s) => s.targetLanguage)
+  const translateAllSlides = useAppStore((s) => s.translateAllSlides)
 
   const activeLayout = song?.layout ?? 'original-translation'
   const linesPerSlide = song?.splitSettings.linesPerSlide ?? 2
   const canAdjustLines = Boolean(song && song.rawLyrics.trim().length > 0)
-  const fillPct = ((linesPerSlide - MIN_LINES_PER_SLIDE) / (MAX_LINES_PER_SLIDE - MIN_LINES_PER_SLIDE)) * 100
 
-  const handleLinesChange = (value: number) => {
-    if (!song) return
-    importLyrics(song.rawLyrics, value)
-  }
+  // The slider updates a local value immediately for responsiveness, but the
+  // (destructive) re-split is debounced so dragging doesn't re-split on every
+  // step. After re-splitting we re-apply translations - cached slide texts
+  // resolve instantly, only genuinely-new splits hit the network - so tweaking
+  // the split no longer wipes out the song's translations.
+  const [pendingLines, setPendingLines] = useState(linesPerSlide)
+  useEffect(() => setPendingLines(linesPerSlide), [linesPerSlide])
+
+  useEffect(() => {
+    if (!song || pendingLines === song.splitSettings.linesPerSlide) return
+    const raw = song.rawLyrics
+    const hadTranslation = song.slides.some((s) => s.translationText !== null)
+    const timer = setTimeout(() => {
+      importLyrics(raw, pendingLines)
+      if (targetLanguage && hadTranslation) void translateAllSlides()
+    }, 350)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingLines])
+
+  const fillPct = ((pendingLines - MIN_LINES_PER_SLIDE) / (MAX_LINES_PER_SLIDE - MIN_LINES_PER_SLIDE)) * 100
 
   return (
     <div className="style-tab" data-testid="layout-tab">
@@ -61,17 +80,17 @@ export function LayoutTab() {
         ))}
       </div>
 
-      <h3 className="style-tab__section-label--spaced">Max Lines Per Slide: {linesPerSlide}</h3>
+      <h3 className="style-tab__section-label--spaced">Max Lines Per Slide: {pendingLines}</h3>
       <input
         type="range"
         aria-label="Max lines per slide"
         min={MIN_LINES_PER_SLIDE}
         max={MAX_LINES_PER_SLIDE}
         step={1}
-        value={linesPerSlide}
+        value={pendingLines}
         disabled={!canAdjustLines}
         style={{ '--range-fill': `${fillPct}%` } as CSSProperties}
-        onChange={(e) => handleLinesChange(Number(e.target.value))}
+        onChange={(e) => setPendingLines(Number(e.target.value))}
       />
       <p className="style-tab__hint">Re-splits the song&apos;s lyrics into slides of this many lines each.</p>
 
