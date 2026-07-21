@@ -80,10 +80,10 @@ const FULL_WIDTH = DEFAULT_MAIN_TEXT_POSITION.width
 const SIDE_MARGIN = 80
 const SIDE_GAP = 40
 
-/** Collapses the seven presets into the layout families the box placement cares
- * about. Two + Two / Alternating currently render like the default stacked
- * layout - the presets are selectable but their bespoke composition is future work. */
-function layoutFamily(layout: SlideLayoutPreset): 'stacked' | 'side-by-side' | 'main-only' | 'translation-only' {
+/** Collapses the presets into the layout families the box placement cares about. */
+function layoutFamily(
+  layout: SlideLayoutPreset,
+): 'stacked' | 'interleaved' | 'side-by-side' | 'main-only' | 'translation-only' {
   switch (layout) {
     case 'side-by-side':
       return 'side-by-side'
@@ -91,6 +91,9 @@ function layoutFamily(layout: SlideLayoutPreset): 'stacked' | 'side-by-side' | '
       return 'main-only'
     case 'translation-only':
       return 'translation-only'
+    case 'alternating':
+    case 'two-plus-two':
+      return 'interleaved'
     default:
       return 'stacked'
   }
@@ -126,6 +129,24 @@ function autoLayoutSlide(slide: Slide, layout: SlideLayoutPreset): Slide {
   }
 
   const mainHeight = boxHeightForWidth(slide.mainText, FULL_WIDTH)
+
+  // Interleaved (Alternating / Two + Two): the original and translated lines
+  // are woven into one block (rendered/exported from the main box), so size the
+  // main box to hold every line from both languages, centered.
+  if (family === 'interleaved' && translation) {
+    const combinedLines =
+      estimateWrappedLines(slide.mainText.plainText, FULL_WIDTH, slide.mainText.style.fontSizePt) +
+      estimateWrappedLines(translation.plainText, FULL_WIDTH, translation.style.fontSizePt)
+    const height = fitBoxHeight(combinedLines, slide.mainText.style.fontSizePt, slide.mainText.style.lineSpacingPct)
+    const y = centeredBoxY(height)
+    return {
+      ...slide,
+      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, y, height),
+      // Keep the translation box co-located with the main box; it isn't drawn
+      // separately in this family (its lines are woven into the main block).
+      translationText: placeBox(translation, FULL_X, FULL_WIDTH, y, height),
+    }
+  }
 
   // Stacked with a translation: center the main+gap+translation block together.
   if (family === 'stacked' && translation) {

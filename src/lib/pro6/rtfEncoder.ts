@@ -95,3 +95,51 @@ export function encodeRtf(lines: string[], style: TextStyle): string {
     `\\f0\\fs${fontSize}${lineSpacing}${alignTag}\\cf1 ${boldTag}${italicTag}${body}}`
   )
 }
+
+function alignControl(align: TextStyle['align']): string {
+  if (align === 'center') return '\\qc '
+  if (align === 'right') return '\\qr '
+  return ''
+}
+
+/**
+ * RTF for a single text element whose paragraphs can each carry their own style
+ * (font family, size, color, weight, alignment). Used by the interleaved
+ * "Alternating" / "Two + Two" layouts, where original and translated lines -
+ * with different colors and fonts - live in one text element. Builds a shared
+ * font table and color table, then emits `\pardN…` per paragraph so each line
+ * selects its own font/size/color/alignment.
+ */
+export function encodeRtfMixed(lines: ReadonlyArray<{ text: string; style: TextStyle }>): string {
+  const segments = lines.length > 0 ? lines : [{ text: '', style: { fontFamily: 'Arial', fontSizePt: 60, lineSpacingPct: 100, color: { r: 1, g: 1, b: 1, a: 1 } } }]
+
+  // Build de-duplicated font and color tables, remembering each style's index.
+  const fonts: string[] = []
+  const colors: string[] = []
+  const fontIndexOf = (family: string) => {
+    const i = fonts.indexOf(family)
+    return i === -1 ? fonts.push(family) - 1 : i
+  }
+  const colorIndexOf = (c: TextStyle['color']) => {
+    const key = `${Math.round(c.r * 255)} ${Math.round(c.g * 255)} ${Math.round(c.b * 255)}`
+    const i = colors.indexOf(key)
+    return (i === -1 ? colors.push(key) - 1 : i) + 1 // colortbl entry 0 is the empty default
+  }
+
+  const paragraphs = segments.map(({ text, style }) => {
+    const fi = fontIndexOf(style.fontFamily)
+    const ci = colorIndexOf(style.color)
+    const fs = Math.round(style.fontSizePt * 2)
+    const spacing =
+      style.lineSpacingPct !== 100 ? `\\sl${Math.round(style.fontSizePt * (style.lineSpacingPct / 100) * 20)}\\slmult1 ` : ''
+    const bold = style.bold ? '\\b ' : ''
+    const italic = style.italic ? '\\i ' : ''
+    return `\\pard ${alignControl(style.align)}${spacing}\\f${fi}\\fs${fs}\\cf${ci} ${bold}${italic}${escapeRtfText(text)}`
+  })
+
+  const fontTable = `{\\fonttbl${fonts.map((f, i) => `{\\f${i} ${escapeRtfText(f)};}`).join('')}}`
+  const colorTable = `{\\colortbl;${colors.map((c) => `\\red${c.split(' ')[0]}\\green${c.split(' ')[1]}\\blue${c.split(' ')[2]};`).join('')}}`
+  const body = paragraphs.join('\\par ') + '\\par'
+
+  return `{\\rtf1\\ansi\\deff0${fontTable}${colorTable}${body}}`
+}

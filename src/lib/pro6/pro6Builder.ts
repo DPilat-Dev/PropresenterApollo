@@ -4,7 +4,8 @@ import type { XmlNode } from './xmlSerializer'
 import { serializeXml } from './xmlSerializer'
 import { serializeRect3D } from './rect3d'
 import { serializeColor } from './colorFormat'
-import { encodeRtf } from './rtfEncoder'
+import { encodeRtf, encodeRtfMixed } from './rtfEncoder'
+import { interleaveGroupSize, interleaveLines, isInterleavedLayout } from '../layout/interleave'
 import { encodeBase64Utf8 } from './base64'
 
 /**
@@ -33,10 +34,12 @@ function formatUuid(id: string): string {
   return id.toUpperCase()
 }
 
-function buildTextElement(el: TextElementState): XmlNode {
-  const lines = el.plainText.split('\n')
-  const rtf = encodeRtf(lines, el.style)
-
+/**
+ * Builds the RVTextElement node for a text element, given the already-encoded
+ * RTF and plain text. Split out from buildTextElement so the interleaved
+ * layouts can reuse the main element's box/attributes with a mixed-style RTF.
+ */
+function buildTextElementNode(el: TextElementState, rtf: string, plainText: string): XmlNode {
   return {
     tag: 'RVTextElement',
     attrs: {
@@ -95,22 +98,44 @@ function buildTextElement(el: TextElementState): XmlNode {
       {
         tag: 'NSString',
         attrs: { rvXMLIvarName: 'PlainText' },
-        text: encodeBase64Utf8(el.plainText),
+        text: encodeBase64Utf8(plainText),
       },
     ],
   }
 }
 
-function buildDisplaySlide(slide: Slide, layout: SlideLayoutPreset): XmlNode {
-  // Visible-role presets drop the hidden text element from the exported slide.
-  // "translation-only" falls back to the main text when a slide has no translation.
-  const showMain = layout !== 'translation-only' || slide.translationText === null
-  const showTranslation = layout !== 'original-only'
+function buildTextElement(el: TextElementState): XmlNode {
+  return buildTextElementNode(el, encodeRtf(el.plainText.split('\n'), el.style), el.plainText)
+}
 
+/**
+ * Builds a single text element that weaves the original and translated lines
+ * together (Alternating / Two + Two). It reuses the main element's box and
+ * attributes, but its RTF carries each line's own color/font/size so the two
+ * languages stay visually distinct within one element.
+ */
+function buildInterleavedElement(main: TextElementState, translation: TextElementState, groupSize: number): XmlNode {
+  const lines = interleaveLines(main.plainText, translation.plainText, groupSize)
+  const segments = lines.map((line) => ({ text: line.text, style: line.role === 'main' ? main.style : translation.style }))
+  const plainText = lines.map((line) => line.text).join('\n')
+  return buildTextElementNode(main, encodeRtfMixed(segments), plainText)
+}
+
+function buildDisplaySlide(slide: Slide, layout: SlideLayoutPreset): XmlNode {
   const displayElements: XmlNode[] = []
-  if (showMain) displayElements.push(buildTextElement(slide.mainText))
-  if (slide.translationText !== null && showTranslation) {
-    displayElements.push(buildTextElement(slide.translationText))
+
+  if (isInterleavedLayout(layout) && slide.translationText !== null) {
+    // Alternating / Two + Two: one element with both languages woven together.
+    displayElements.push(buildInterleavedElement(slide.mainText, slide.translationText, interleaveGroupSize(layout)))
+  } else {
+    // Visible-role presets drop the hidden text element from the exported slide.
+    // "translation-only" falls back to the main text when a slide has no translation.
+    const showMain = layout !== 'translation-only' || slide.translationText === null
+    const showTranslation = layout !== 'original-only'
+    if (showMain) displayElements.push(buildTextElement(slide.mainText))
+    if (slide.translationText !== null && showTranslation) {
+      displayElements.push(buildTextElement(slide.translationText))
+    }
   }
 
   return {

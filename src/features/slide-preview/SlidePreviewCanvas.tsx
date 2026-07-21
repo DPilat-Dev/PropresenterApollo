@@ -4,6 +4,7 @@ import { useAppStore } from '../../state/store'
 import type { RGBAColor, SlideLayoutPreset, Slide, TextElementState, VerticalAlignment } from '../../types/song'
 import { CANVAS_WIDTH } from '../../types/song'
 import { pixelToPercent } from './previewGeometry'
+import { interleaveGroupSize, interleaveLines, isInterleavedLayout } from '../../lib/layout/interleave'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons'
 
 // Standard 96dpi pt->px conversion, used only to approximate relative font
@@ -63,6 +64,26 @@ function textElementStyle(el: TextElementState, scale: number): CSSProperties {
     ...stroke,
     opacity: el.opacity,
     transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+  }
+}
+
+/** Text styling (no positioning) for one woven line in an interleaved layout,
+ * taken from whichever role that line belongs to. */
+function lineTextStyle(el: TextElementState, scale: number): CSSProperties {
+  const fontSizePx = el.style.fontSizePt * scale * PT_TO_PX
+  const shadowPx = Math.max(1, Math.round(3 * scale * PT_TO_PX))
+  const strokePx = Math.max(1, Math.round(1.5 * scale * PT_TO_PX))
+  return {
+    fontFamily: el.style.fontFamily,
+    fontSize: `${fontSizePx}px`,
+    lineHeight: el.style.lineSpacingPct / 100,
+    color: toCssRgba(el.style.color),
+    fontWeight: el.style.bold ? 'bold' : 'normal',
+    fontStyle: el.style.italic ? 'italic' : 'normal',
+    textAlign: el.style.align ?? 'center',
+    whiteSpace: 'pre-wrap',
+    textShadow: el.style.textShadow ? `0 ${shadowPx}px ${shadowPx * 1.5}px rgba(0,0,0,0.65)` : undefined,
+    ...(el.style.textOutline ? { WebkitTextStroke: `${strokePx}px rgba(0,0,0,0.85)` } : {}),
   }
 }
 
@@ -139,6 +160,7 @@ export function SlidePreviewCanvas() {
   // the preview just renders those positions directly.
   const layout: SlideLayoutPreset = song?.layout ?? 'original-translation'
   const hasTranslation = slide?.translationText != null
+  const interleaved = hasTranslation && isInterleavedLayout(layout)
   const showMain = layout !== 'translation-only' || !hasTranslation
   const showTranslation = layout !== 'original-only'
 
@@ -168,15 +190,37 @@ export function SlidePreviewCanvas() {
               background: toCssRgba(slide.backgroundColor),
             }}
           >
-            {showMain && (
+            {interleaved && slide.translationText ? (
               <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale)}>
-                {slide.mainText.plainText}
+                {interleaveLines(
+                  slide.mainText.plainText,
+                  slide.translationText.plainText,
+                  interleaveGroupSize(layout),
+                ).map((line, i) => (
+                  <div
+                    key={i}
+                    style={lineTextStyle(line.role === 'main' ? slide.mainText : slide.translationText!, scale)}
+                  >
+                    {line.text}
+                  </div>
+                ))}
               </div>
-            )}
-            {slide.translationText !== null && showTranslation && (
-              <div data-testid="slide-preview-translation-text" style={textElementStyle(slide.translationText, scale)}>
-                {slide.translationText.plainText}
-              </div>
+            ) : (
+              <>
+                {showMain && (
+                  <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale)}>
+                    {slide.mainText.plainText}
+                  </div>
+                )}
+                {slide.translationText !== null && showTranslation && (
+                  <div
+                    data-testid="slide-preview-translation-text"
+                    style={textElementStyle(slide.translationText, scale)}
+                  >
+                    {slide.translationText.plainText}
+                  </div>
+                )}
+              </>
             )}
             <span className="slide-preview-canvas__label">{displayLabel}</span>
           </div>
