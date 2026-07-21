@@ -915,6 +915,22 @@ section[aria-labelledby='lyrics-input-heading'] > button {
   text-align: center;
 }
 
+.style-panel__separate-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+  cursor: pointer;
+}
+
+.style-panel__separate-toggle input[type='checkbox'] {
+  width: auto;
+  accent-color: var(--color-accent);
+}
+
 .style-panel__empty {
   font-size: 0.85rem;
   color: var(--color-text-muted);

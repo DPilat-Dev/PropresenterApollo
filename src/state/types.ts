@@ -5,6 +5,8 @@ import type { TranslationCache } from '../types/song'
 
 export type TextRole = 'main' | 'translation'
 export type TextEffect = 'shadow' | 'outline'
+/** Which text a style edit targets: one role, or both roles at once. */
+export type StyleTarget = TextRole | 'both'
 
 export interface SongSlice {
   song: Song | null

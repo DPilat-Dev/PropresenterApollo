@@ -85,7 +85,6 @@ export type SlideLayoutPreset =
   | 'original-translation'
   | 'two-plus-two'
   | 'alternating'
-  | 'three-languages'
   | 'side-by-side'
   | 'original-only'
   | 'translation-only'
@@ -100,7 +99,6 @@ export const SLIDE_LAYOUT_PRESETS: ReadonlyArray<SlideLayoutPresetMeta> = [
   { key: 'original-translation', name: 'Original + Translation', description: 'One line original, one line translated below' },
   { key: 'two-plus-two', name: 'Two + Two', description: 'Two lines original, then two lines translated' },
   { key: 'alternating', name: 'Alternating', description: 'Original and translation alternate line by line' },
-  { key: 'three-languages', name: 'Three Languages', description: 'Original, translation, and third language stacked' },
   { key: 'side-by-side', name: 'Side by Side', description: 'Original on left, translation on right' },
   { key: 'original-only', name: 'Original Only', description: 'Show only the source language' },
   { key: 'translation-only', name: 'Translation Only', description: 'Show only the translated language' },

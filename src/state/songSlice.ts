@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { Slide, SlideGroup, Song, TextElementState } from '../types/song'
+import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState } from '../types/song'
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -50,55 +50,107 @@ function createTextElement(role: TextRole, plainText: string): TextElementState 
   }
 }
 
-/** Number of lines in a text element's content (min 1). */
-function lineCountOf(el: TextElementState): number {
-  return Math.max(1, el.plainText.split('\n').length)
+// Rough canvas-px width of one character ≈ fontSizePt * this factor. Used to
+// estimate how many display lines the text wraps to inside a box of a given
+// width, so a narrower box (e.g. the Side-by-Side columns) gets a taller box.
+// Deliberately a slight over-estimate of character width (fewer chars per line
+// → taller box) so text is never clipped.
+const CHAR_WIDTH_FACTOR = 0.6
+
+/** Estimates how many display lines `text` wraps to inside a box `width` px wide. */
+function estimateWrappedLines(text: string, width: number, fontSizePt: number): number {
+  const charsPerLine = Math.max(1, Math.floor(width / (fontSizePt * CHAR_WIDTH_FACTOR)))
+  let lines = 0
+  for (const raw of text.split('\n')) {
+    lines += Math.max(1, Math.ceil(raw.trim().length / charsPerLine))
+  }
+  return Math.max(1, lines)
+}
+
+/** Box height (canvas px) needed to hold `el`'s text wrapped inside `width` px. */
+function boxHeightForWidth(el: TextElementState, width: number): number {
+  const lines = estimateWrappedLines(el.plainText, width, el.style.fontSizePt)
+  return fitBoxHeight(lines, el.style.fontSizePt, el.style.lineSpacingPct)
+}
+
+// Full-width text-box geometry (canvas px) used by every stacked layout.
+const FULL_X = DEFAULT_MAIN_TEXT_POSITION.x
+const FULL_WIDTH = DEFAULT_MAIN_TEXT_POSITION.width
+// Side-by-side column geometry.
+const SIDE_MARGIN = 80
+const SIDE_GAP = 40
+
+/** Collapses the seven presets into the layout families the box placement cares
+ * about. Two + Two / Alternating currently render like the default stacked
+ * layout - the presets are selectable but their bespoke composition is future work. */
+function layoutFamily(layout: SlideLayoutPreset): 'stacked' | 'side-by-side' | 'main-only' | 'translation-only' {
+  switch (layout) {
+    case 'side-by-side':
+      return 'side-by-side'
+    case 'original-only':
+      return 'main-only'
+    case 'translation-only':
+      return 'translation-only'
+    default:
+      return 'stacked'
+  }
+}
+
+function placeBox(el: TextElementState, x: number, width: number, y: number, height: number): TextElementState {
+  return { ...el, position: { ...el.position, x, width, y, height }, verticalAlignment: 'center' }
 }
 
 /**
- * Auto-lays-out a slide's text boxes: sizes the main box to its line count and
- * vertically centers it. When the slide also has translation text, the
- * translation box is sized to its own line count and placed directly under the
- * main box (a CLAMP_GAP gap between them), with the combined main+translation
- * block centered vertically as a unit. Leaves x/width and styles untouched.
+ * Auto-lays-out a slide's text boxes for the given layout preset. Boxes are
+ * sized to their own line count and vertically centered; the translation gets
+ * exactly the same dynamic treatment as the main text. Placement depends on the
+ * layout family:
+ *  - stacked: main above translation (CLAMP_GAP between), the pair centered.
+ *  - side-by-side: main on the left half, translation on the right half.
+ *  - main-only / translation-only: the visible box is centered on its own.
  */
-function autoLayoutSlide(slide: Slide): Slide {
-  const mainHeight = fitBoxHeight(lineCountOf(slide.mainText), slide.mainText.style.fontSizePt, slide.mainText.style.lineSpacingPct)
+function autoLayoutSlide(slide: Slide, layout: SlideLayoutPreset): Slide {
+  const family = layoutFamily(layout)
+  const translation = slide.translationText
 
-  if (slide.translationText === null) {
+  if (family === 'side-by-side' && translation) {
+    const half = CANVAS_WIDTH / 2
+    const colWidth = half - SIDE_MARGIN - SIDE_GAP / 2
+    const mainHeight = boxHeightForWidth(slide.mainText, colWidth)
+    const translationHeight = boxHeightForWidth(translation, colWidth)
     return {
       ...slide,
-      mainText: {
-        ...slide.mainText,
-        position: { ...slide.mainText.position, y: centeredBoxY(mainHeight), height: mainHeight },
-        verticalAlignment: 'center',
-      },
+      mainText: placeBox(slide.mainText, SIDE_MARGIN, colWidth, centeredBoxY(mainHeight), mainHeight),
+      translationText: placeBox(translation, half + SIDE_GAP / 2, colWidth, centeredBoxY(translationHeight), translationHeight),
     }
   }
 
-  const translationHeight = fitBoxHeight(
-    lineCountOf(slide.translationText),
-    slide.translationText.style.fontSizePt,
-    slide.translationText.style.lineSpacingPct,
-  )
-  const blockTop = centeredBoxY(mainHeight + CLAMP_GAP + translationHeight)
+  const mainHeight = boxHeightForWidth(slide.mainText, FULL_WIDTH)
 
+  // Stacked with a translation: center the main+gap+translation block together.
+  if (family === 'stacked' && translation) {
+    const translationHeight = boxHeightForWidth(translation, FULL_WIDTH)
+    const blockTop = centeredBoxY(mainHeight + CLAMP_GAP + translationHeight)
+    return {
+      ...slide,
+      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, blockTop, mainHeight),
+      translationText: placeBox(translation, FULL_X, FULL_WIDTH, blockTop + mainHeight + CLAMP_GAP, translationHeight),
+    }
+  }
+
+  // main-only, translation-only, or no translation: center each (visible) box on
+  // its own. Hidden boxes are still centered so switching layouts stays sane.
+  const mainText = placeBox(slide.mainText, FULL_X, FULL_WIDTH, centeredBoxY(mainHeight), mainHeight)
+  if (!translation) return { ...slide, mainText }
+  const translationHeight = boxHeightForWidth(translation, FULL_WIDTH)
   return {
     ...slide,
-    mainText: {
-      ...slide.mainText,
-      position: { ...slide.mainText.position, y: blockTop, height: mainHeight },
-      verticalAlignment: 'center',
-    },
-    translationText: {
-      ...slide.translationText,
-      position: { ...slide.translationText.position, y: blockTop + mainHeight + CLAMP_GAP, height: translationHeight },
-      verticalAlignment: 'center',
-    },
+    mainText,
+    translationText: placeBox(translation, FULL_X, FULL_WIDTH, centeredBoxY(translationHeight), translationHeight),
   }
 }
 
-function createSlideFromLines(lines: string[], order: number, label = '', autoFit = true): Slide {
+function createSlideFromLines(lines: string[], order: number, label = '', autoFit = true, layout: SlideLayoutPreset = 'original-translation'): Slide {
   const slide: Slide = {
     id: uuidv4(),
     label,
@@ -109,7 +161,7 @@ function createSlideFromLines(lines: string[], order: number, label = '', autoFi
     translationText: null,
     order,
   }
-  return autoFit ? autoLayoutSlide(slide) : slide
+  return autoFit ? autoLayoutSlide(slide, layout) : slide
 }
 
 function nowIso(): string {
@@ -266,7 +318,10 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
   setSongLayout: (layout) => {
     const song = get().song
     if (!song) return
-    set({ song: { ...song, layout, updatedAt: nowIso() } })
+    // Changing the composition re-places every slide's boxes (stacked vs
+    // side-by-side vs single) so the change is immediate and export-correct.
+    const slides = song.autoFitBox ? song.slides.map((s) => autoLayoutSlide(s, layout)) : song.slides
+    set({ song: { ...song, layout, slides, updatedAt: nowIso() } })
   },
 
   setSongPublished: (published) => {
@@ -288,7 +343,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
       song: {
         ...song,
         updatedAt: nowIso(),
-        slides: song.slides.map(autoLayoutSlide),
+        slides: song.slides.map((s) => autoLayoutSlide(s, song.layout)),
       },
     })
   },
@@ -297,7 +352,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     const song = get().song
     if (!song) return
     const next: Song = { ...song, autoFitBox: enabled, updatedAt: nowIso() }
-    if (enabled) next.slides = next.slides.map(autoLayoutSlide)
+    if (enabled) next.slides = next.slides.map((s) => autoLayoutSlide(s, next.layout))
     set({ song: next })
   },
 
@@ -335,11 +390,12 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     // single unnamed section, i.e. the historical flat behavior.
     const existingForFlag = get().song
     const autoFit = existingForFlag?.autoFitBox ?? true
+    const layout = existingForFlag?.layout ?? 'original-translation'
     const sections = splitLyricsIntoSections(rawText, linesPerSlide)
     const slides: Slide[] = []
     for (const section of sections) {
       for (const lines of section.slides) {
-        slides.push(createSlideFromLines(lines, slides.length, section.name, autoFit))
+        slides.push(createSlideFromLines(lines, slides.length, section.name, autoFit, layout))
       }
     }
 
@@ -382,7 +438,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     if (updated.autoFitBox) {
       updated = {
         ...updated,
-        slides: updated.slides.map((s) => (s.id === slideId ? autoLayoutSlide(s) : s)),
+        slides: updated.slides.map((s) => (s.id === slideId ? autoLayoutSlide(s, updated.layout) : s)),
       }
     }
     set({ song: updated })

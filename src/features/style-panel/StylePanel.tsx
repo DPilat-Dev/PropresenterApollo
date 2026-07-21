@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../../state/store'
-import type { TextRole } from '../../state/types'
+import type { StyleTarget, TextRole } from '../../state/types'
 import { LayoutTab } from './LayoutTab'
 import { TypeTab } from './TypeTab'
 import { ColorsTab } from './ColorsTab'
@@ -26,6 +26,9 @@ export function StylePanel() {
   const selectedSlideId = useAppStore((s) => s.selectedSlideId)
   const [activeTab, setActiveTab] = useState<StyleTabKey>('layout')
   const [preferredRole, setPreferredRole] = useState<TextRole>('main')
+  // When false (default), Type edits apply to BOTH main and translation text.
+  // The checkbox flips this on to style each role separately.
+  const [separateRoles, setSeparateRoles] = useState(false)
 
   if (!song) return null
 
@@ -33,16 +36,14 @@ export function StylePanel() {
 
   // Type and Colors are song-wide settings, so they don't require a selection -
   // they read their "current value" from the selected slide when there is one,
-  // otherwise from the first slide as a representative. (Layout's per-slide
-  // Position section still guards on the real `slide` itself.)
+  // otherwise from the first slide as a representative.
   const representativeSlide = slide ?? song.slides[0] ?? null
+  const hasTranslation = representativeSlide?.translationText != null
 
-  // Falls back to 'main' when translation text doesn't exist, even if the
-  // user had it selected on a previous slide that did have one.
-  const role: TextRole =
-    preferredRole === 'translation' && representativeSlide?.translationText === null ? 'main' : preferredRole
-  const showRoleToggle =
-    activeTab === 'type' && representativeSlide !== null && representativeSlide.translationText !== null
+  // The Type tab's edit target: both roles by default; a single role when the
+  // user opts into separate styling; always just main when there's no translation.
+  const typeTarget: StyleTarget = !hasTranslation ? 'main' : separateRoles ? preferredRole : 'both'
+  const showSeparateControls = activeTab === 'type' && hasTranslation
 
   return (
     <section aria-labelledby="style-panel-heading" className="style-panel">
@@ -63,25 +64,37 @@ export function StylePanel() {
         ))}
       </div>
 
-      {showRoleToggle && (
-        <div className="segmented style-panel__role-toggle" role="group" aria-label="Editing text element">
-          <button
-            type="button"
-            className="segmented__item"
-            aria-pressed={role === 'main'}
-            onClick={() => setPreferredRole('main')}
-          >
-            Main text
-          </button>
-          <button
-            type="button"
-            className="segmented__item"
-            aria-pressed={role === 'translation'}
-            onClick={() => setPreferredRole('translation')}
-          >
-            Translation text
-          </button>
-        </div>
+      {showSeparateControls && (
+        <>
+          <label className="style-panel__separate-toggle">
+            <input
+              type="checkbox"
+              checked={separateRoles}
+              onChange={(e) => setSeparateRoles(e.target.checked)}
+            />
+            Style main &amp; translation separately
+          </label>
+          {separateRoles && (
+            <div className="segmented style-panel__role-toggle" role="group" aria-label="Editing text element">
+              <button
+                type="button"
+                className="segmented__item"
+                aria-pressed={preferredRole === 'main'}
+                onClick={() => setPreferredRole('main')}
+              >
+                Main text
+              </button>
+              <button
+                type="button"
+                className="segmented__item"
+                aria-pressed={preferredRole === 'translation'}
+                onClick={() => setPreferredRole('translation')}
+              >
+                Translation text
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Layout hosts song-level controls (presets, Quick Edit, translation,
@@ -92,7 +105,7 @@ export function StylePanel() {
       {activeTab === 'layout' && <LayoutTab />}
       {activeTab === 'type' &&
         (representativeSlide ? (
-          <TypeTab slide={representativeSlide} role={role} />
+          <TypeTab slide={representativeSlide} target={typeTarget} />
         ) : (
           <p className="style-panel__empty">Add lyrics to create slides first.</p>
         ))}

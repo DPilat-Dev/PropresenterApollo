@@ -27,16 +27,7 @@ function justifyContentFor(alignment: VerticalAlignment): CSSProperties['justify
   return 'center'
 }
 
-/** Positional overrides used by the "Side by Side" layout preset to place the
- * main text on the left half and the translation on the right half, without
- * mutating the slide's stored positions. */
-type PlacementOverride = { leftPct: number; widthPct: number } | undefined
-
-function textElementStyle(
-  el: TextElementState,
-  scale: number,
-  override: PlacementOverride = undefined,
-): CSSProperties {
+function textElementStyle(el: TextElementState, scale: number): CSSProperties {
   const pct = pixelToPercent(el.position)
   const fontSizePx = el.style.fontSizePt * scale * PT_TO_PX
   const textAlign = el.style.align ?? 'center'
@@ -52,9 +43,9 @@ function textElementStyle(
 
   return {
     position: 'absolute',
-    left: `${override?.leftPct ?? pct.leftPct}%`,
+    left: `${pct.leftPct}%`,
     top: `${pct.topPct}%`,
-    width: `${override?.widthPct ?? pct.widthPct}%`,
+    width: `${pct.widthPct}%`,
     height: `${pct.heightPct}%`,
     display: 'flex',
     flexDirection: 'column',
@@ -143,13 +134,13 @@ export function SlidePreviewCanvas() {
   const scale = renderedWidth / CANVAS_WIDTH
   const displayLabel = slide && slide.label.trim().length > 0 ? slide.label : slide ? `Slide ${slideIndex + 1}` : ''
 
-  // Layout preset drives which roles show and, for "Side by Side", where.
+  // Layout preset drives which roles show; box placement (stacked vs side by
+  // side) is baked into each element's stored position by the auto-layout, so
+  // the preview just renders those positions directly.
   const layout: SlideLayoutPreset = song?.layout ?? 'original-translation'
-  const showMain = layout !== 'translation-only'
+  const hasTranslation = slide?.translationText != null
+  const showMain = layout !== 'translation-only' || !hasTranslation
   const showTranslation = layout !== 'original-only'
-  const sideBySide = layout === 'side-by-side'
-  const mainOverride: PlacementOverride = sideBySide ? { leftPct: 4, widthPct: 44 } : undefined
-  const translationOverride: PlacementOverride = sideBySide ? { leftPct: 52, widthPct: 44 } : undefined
 
   const goToOffset = (offset: number) => {
     if (slideIndex === -1) return
@@ -178,15 +169,12 @@ export function SlidePreviewCanvas() {
             }}
           >
             {showMain && (
-              <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale, mainOverride)}>
+              <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale)}>
                 {slide.mainText.plainText}
               </div>
             )}
             {slide.translationText !== null && showTranslation && (
-              <div
-                data-testid="slide-preview-translation-text"
-                style={textElementStyle(slide.translationText, scale, translationOverride)}
-              >
+              <div data-testid="slide-preview-translation-text" style={textElementStyle(slide.translationText, scale)}>
                 {slide.translationText.plainText}
               </div>
             )}

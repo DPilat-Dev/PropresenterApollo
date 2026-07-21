@@ -1,4 +1,4 @@
-import type { Slide, SlideGroup, Song, TextElementState, VerticalAlignment } from '../../types/song'
+import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState, VerticalAlignment } from '../../types/song'
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../../types/song'
 import type { XmlNode } from './xmlSerializer'
 import { serializeXml } from './xmlSerializer'
@@ -101,9 +101,15 @@ function buildTextElement(el: TextElementState): XmlNode {
   }
 }
 
-function buildDisplaySlide(slide: Slide): XmlNode {
-  const displayElements: XmlNode[] = [buildTextElement(slide.mainText)]
-  if (slide.translationText !== null) {
+function buildDisplaySlide(slide: Slide, layout: SlideLayoutPreset): XmlNode {
+  // Visible-role presets drop the hidden text element from the exported slide.
+  // "translation-only" falls back to the main text when a slide has no translation.
+  const showMain = layout !== 'translation-only' || slide.translationText === null
+  const showTranslation = layout !== 'original-only'
+
+  const displayElements: XmlNode[] = []
+  if (showMain) displayElements.push(buildTextElement(slide.mainText))
+  if (slide.translationText !== null && showTranslation) {
     displayElements.push(buildTextElement(slide.translationText))
   }
 
@@ -124,11 +130,11 @@ function buildDisplaySlide(slide: Slide): XmlNode {
   }
 }
 
-function buildSlideGrouping(group: SlideGroup, slidesById: Map<string, Slide>): XmlNode {
+function buildSlideGrouping(group: SlideGroup, slidesById: Map<string, Slide>, layout: SlideLayoutPreset): XmlNode {
   const slides = group.slideIds
     .map((id) => slidesById.get(id))
     .filter((slide): slide is Slide => slide !== undefined)
-    .map(buildDisplaySlide)
+    .map((slide) => buildDisplaySlide(slide, layout))
 
   return {
     tag: 'RVSlideGrouping',
@@ -148,7 +154,7 @@ function buildSlideGrouping(group: SlideGroup, slidesById: Map<string, Slide>): 
  */
 export function buildPro6Document(song: Song): XmlNode {
   const slidesById = new Map(song.slides.map((slide) => [slide.id, slide]))
-  const groups = song.groups.map((group) => buildSlideGrouping(group, slidesById))
+  const groups = song.groups.map((group) => buildSlideGrouping(group, slidesById, song.layout))
 
   return {
     tag: 'RVPresentationDocument',
