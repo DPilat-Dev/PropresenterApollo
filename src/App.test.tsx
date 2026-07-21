@@ -53,9 +53,6 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /export to propresenter/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /back to songs/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'My Song' })).toBeInTheDocument()
-    // A brand-new song has no slides yet, so Quick Edit (which needs at least
-    // one slide) is not shown - see the slide-generation test below for that.
-    expect(screen.queryByRole('region', { name: /quick edit/i })).not.toBeInTheDocument()
     // The home/song-list-only content must be gone.
     expect(screen.queryByRole('heading', { name: /your songs/i })).not.toBeInTheDocument()
 
@@ -74,9 +71,6 @@ describe('App', () => {
 
     expect(useAppStore.getState().song?.slides.length).toBeGreaterThan(0)
     expect(screen.getByTestId('slide-preview-canvas')).toBeInTheDocument()
-    // Once slides exist, the bulk Quick Edit section (inside the STYLE
-    // panel's Layout tab) mounts - it doesn't require a slide to be selected.
-    expect(screen.getByRole('region', { name: /quick edit/i })).toBeInTheDocument()
   })
 
   it('creating a new song from the home view transitions straight into the editor', async () => {

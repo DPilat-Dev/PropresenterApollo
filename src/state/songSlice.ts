@@ -3,6 +3,7 @@ import type { Slide, SlideGroup, Song, TextElementState } from '../types/song'
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  centeredBoxY,
   DEFAULT_FILL_COLOR,
   DEFAULT_MAIN_TEXT_POSITION,
   DEFAULT_MAIN_TEXT_STYLE,
@@ -10,6 +11,7 @@ import {
   DEFAULT_THIRD_LANGUAGE_COLOR,
   DEFAULT_TRANSLATION_TEXT_POSITION,
   DEFAULT_TRANSLATION_TEXT_STYLE,
+  fitBoxHeight,
 } from '../types/song'
 import { splitLyricsIntoSections } from '../lib/lyrics/splitLyrics'
 import type { Slice, SongSlice, TextEffect, TextRole } from './types'
@@ -48,14 +50,27 @@ function createTextElement(role: TextRole, plainText: string): TextElementState 
   }
 }
 
-function createSlideFromLines(lines: string[], order: number, label = ''): Slide {
+/** Re-sizes a main-text element's box to fit `lineCount` lines and centers it
+ * vertically. Leaves x/width and everything else untouched. */
+function fitMainTextElement(el: TextElementState, lineCount: number): TextElementState {
+  const height = fitBoxHeight(lineCount, el.style.fontSizePt, el.style.lineSpacingPct)
+  return {
+    ...el,
+    position: { ...el.position, y: centeredBoxY(height), height },
+    verticalAlignment: 'center',
+  }
+}
+
+function createSlideFromLines(lines: string[], order: number, label = '', autoFit = true): Slide {
+  let mainText = createTextElement('main', lines.join('\n'))
+  if (autoFit) mainText = fitMainTextElement(mainText, lines.length)
   return {
     id: uuidv4(),
     label,
     notes: '',
     enabled: true,
     backgroundColor: { ...DEFAULT_SLIDE_BACKGROUND },
-    mainText: createTextElement('main', lines.join('\n')),
+    mainText,
     translationText: null,
     order,
   }
@@ -79,6 +94,7 @@ function emptySong(title: string): Song {
     layout: 'original-translation',
     thirdLanguageColor: { ...DEFAULT_THIRD_LANGUAGE_COLOR },
     published: false,
+    autoFitBox: true,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   }
@@ -229,6 +245,34 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     set({ song: { ...song, thirdLanguageColor, updatedAt: nowIso() } })
   },
 
+  refitAllBoxes: () => {
+    const song = get().song
+    if (!song || !song.autoFitBox) return
+    set({
+      song: {
+        ...song,
+        updatedAt: nowIso(),
+        slides: song.slides.map((slide) => ({
+          ...slide,
+          mainText: fitMainTextElement(slide.mainText, slide.mainText.plainText.split('\n').length),
+        })),
+      },
+    })
+  },
+
+  setAutoFitBox: (enabled) => {
+    const song = get().song
+    if (!song) return
+    const next: Song = { ...song, autoFitBox: enabled, updatedAt: nowIso() }
+    if (enabled) {
+      next.slides = next.slides.map((slide) => ({
+        ...slide,
+        mainText: fitMainTextElement(slide.mainText, slide.mainText.plainText.split('\n').length),
+      }))
+    }
+    set({ song: next })
+  },
+
   setAllSlidesTextEffect: (effect: TextEffect, enabled) => {
     const song = get().song
     if (!song) return
@@ -261,11 +305,13 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     // slides beneath it (stored on Slide.label, used by the sidebar grouping
     // and the exported pro6 slide label). Lyrics with no headers collapse to a
     // single unnamed section, i.e. the historical flat behavior.
+    const existingForFlag = get().song
+    const autoFit = existingForFlag?.autoFitBox ?? true
     const sections = splitLyricsIntoSections(rawText, linesPerSlide)
     const slides: Slide[] = []
     for (const section of sections) {
       for (const lines of section.slides) {
-        slides.push(createSlideFromLines(lines, slides.length, section.name))
+        slides.push(createSlideFromLines(lines, slides.length, section.name, autoFit))
       }
     }
 
@@ -292,6 +338,7 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
       layout: existing?.layout ?? 'original-translation',
       thirdLanguageColor: existing?.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
       published: existing?.published ?? false,
+      autoFitBox: existing?.autoFitBox ?? true,
       createdAt: existing?.createdAt ?? nowIso(),
       updatedAt: nowIso(),
     }

@@ -48,8 +48,17 @@ interface TypeTabProps {
  */
 export function TypeTab({ slide, role }: TypeTabProps) {
   const updateAllSlidesStyle = useAppStore((s) => s.updateAllSlidesStyle)
+  const refitAllBoxes = useAppStore((s) => s.refitAllBoxes)
   const element = role === 'main' ? slide.mainText : slide.translationText
   const label = role === 'main' ? 'Main text' : 'Translation text'
+
+  // Font size / line height change how much vertical room the text needs, so
+  // re-fit the (main-text) boxes after those edits. refitAllBoxes no-ops when
+  // auto-fit is off.
+  const applyMainStyleWithRefit = (style: Parameters<typeof updateAllSlidesStyle>[1]) => {
+    updateAllSlidesStyle(role, style)
+    if (role === 'main') refitAllBoxes()
+  }
 
   if (!element) {
     return <p className="style-tab__hint">This slide has no translation text yet.</p>
@@ -88,7 +97,7 @@ export function TypeTab({ slide, role }: TypeTabProps) {
         step={1}
         value={fontSize}
         style={{ '--range-fill': `${fillPercent(fontSize, MIN_FONT_SIZE, MAX_FONT_SIZE)}%` } as CSSProperties}
-        onChange={(e) => updateAllSlidesStyle(role, { fontSizePt: Number(e.target.value) })}
+        onChange={(e) => applyMainStyleWithRefit({ fontSizePt: Number(e.target.value) })}
       />
 
       <h3 className="style-tab__section-label--spaced">Font Weight</h3>
@@ -126,7 +135,7 @@ export function TypeTab({ slide, role }: TypeTabProps) {
         step={10}
         value={lineHeightPct}
         style={{ '--range-fill': `${fillPercent(lineHeightPct, MIN_LINE_HEIGHT, MAX_LINE_HEIGHT)}%` } as CSSProperties}
-        onChange={(e) => updateAllSlidesStyle(role, { lineSpacingPct: Number(e.target.value) })}
+        onChange={(e) => applyMainStyleWithRefit({ lineSpacingPct: Number(e.target.value) })}
       />
     </div>
   )

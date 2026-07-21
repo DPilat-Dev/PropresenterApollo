@@ -118,6 +118,7 @@ const song: Song = {
   layout: 'original-translation',
   thirdLanguageColor: { r: 0.556863, g: 0.803922, b: 0.901961, a: 1 },
   published: false,
+  autoFitBox: false,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 }

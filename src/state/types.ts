@@ -18,6 +18,11 @@ export interface SongSlice {
   setSongPublished: (published: boolean) => void
   setThirdLanguageColor: (color: RGBAColor) => void
   setAllSlidesTextEffect: (effect: TextEffect, enabled: boolean) => void
+  /** Toggles auto-fit box sizing; enabling it immediately re-fits every slide. */
+  setAutoFitBox: (enabled: boolean) => void
+  /** Re-sizes and re-centers every slide's main-text box to fit its current
+   * content and font. No-op unless auto-fit is on. */
+  refitAllBoxes: () => void
   updateSlideText: (slideId: string, role: TextRole, plainText: string) => void
   updateSlideStyle: (slideId: string, role: TextRole, style: Partial<TextStyle>) => void
   updateAllSlidesStyle: (role: TextRole, style: Partial<TextStyle>) => void

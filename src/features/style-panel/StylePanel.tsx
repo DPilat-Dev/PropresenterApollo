@@ -31,10 +31,18 @@ export function StylePanel() {
 
   const slide = selectedSlideId ? (song.slides.find((s) => s.id === selectedSlideId) ?? null) : null
 
+  // Type and Colors are song-wide settings, so they don't require a selection -
+  // they read their "current value" from the selected slide when there is one,
+  // otherwise from the first slide as a representative. (Layout's per-slide
+  // Position section still guards on the real `slide` itself.)
+  const representativeSlide = slide ?? song.slides[0] ?? null
+
   // Falls back to 'main' when translation text doesn't exist, even if the
   // user had it selected on a previous slide that did have one.
-  const role: TextRole = preferredRole === 'translation' && slide?.translationText === null ? 'main' : preferredRole
-  const showRoleToggle = activeTab === 'type' && slide !== null && slide.translationText !== null
+  const role: TextRole =
+    preferredRole === 'translation' && representativeSlide?.translationText === null ? 'main' : preferredRole
+  const showRoleToggle =
+    activeTab === 'type' && representativeSlide !== null && representativeSlide.translationText !== null
 
   return (
     <section aria-labelledby="style-panel-heading" className="style-panel">
@@ -76,16 +84,24 @@ export function StylePanel() {
         </div>
       )}
 
-      {/* Layout hosts bulk/song-level controls (Quick Edit, translation
-          language, max lines per slide) that don't need a selected slide -
-          only its per-slide "Position" section does, which LayoutTab itself
-          guards on `slide`. Type/Colors operate on one slide's text, so they
-          need a real selection. */}
-      {activeTab === 'layout' && <LayoutTab slide={slide} role={role} />}
+      {/* Layout hosts song-level controls (presets, Quick Edit, translation,
+          max lines, text-box sizing); its per-slide "Position" section guards
+          on the real `slide` itself. Type/Colors are song-wide and only need a
+          representative slide to read current values from - they show an empty
+          state only when the song genuinely has no slides yet. */}
+      {activeTab === 'layout' && <LayoutTab />}
       {activeTab === 'type' &&
-        (slide ? <TypeTab slide={slide} role={role} /> : <p className="style-panel__empty">Select a slide to edit its type.</p>)}
+        (representativeSlide ? (
+          <TypeTab slide={representativeSlide} role={role} />
+        ) : (
+          <p className="style-panel__empty">Add lyrics to create slides first.</p>
+        ))}
       {activeTab === 'colors' &&
-        (slide ? <ColorsTab slide={slide} /> : <p className="style-panel__empty">Select a slide to edit its colors.</p>)}
+        (representativeSlide ? (
+          <ColorsTab slide={representativeSlide} />
+        ) : (
+          <p className="style-panel__empty">Add lyrics to create slides first.</p>
+        ))}
       {activeTab === 'quality' && <QualityTab />}
     </section>
   )

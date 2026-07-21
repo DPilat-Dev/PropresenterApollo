@@ -49,6 +49,8 @@ function normalizeSong(song: Song): Song {
     layout: song.layout ?? 'original-translation',
     thirdLanguageColor: song.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
     published: song.published ?? false,
+    // Old records predate auto-fit; leave their hand-placed boxes untouched.
+    autoFitBox: song.autoFitBox ?? false,
     slides: song.slides.map((slide) => ({
       ...slide,
       mainText: backfillFillColor(slide.mainText),

@@ -124,8 +124,33 @@ export interface Song {
   thirdLanguageColor: RGBAColor
   /** Whether the song has been "published" (drives the header badge/actions). */
   published: boolean
+  /** When true, each slide's main-text box height is sized to its line count and
+   * vertically centered, so the box hugs its content (see fitBoxHeight). When
+   * false, the box keeps whatever height/position the user set manually. */
+  autoFitBox: boolean
   createdAt: string
   updatedAt: string
+}
+
+// Auto-fit tuning: a line's rendered box is ~1.35x the font size, plus a little
+// vertical breathing room above+below the text block. These are deliberate
+// approximations for a CSS/pro6 layout we don't measure exactly.
+const AUTO_FIT_LINE_FACTOR = 1.35
+const AUTO_FIT_VERTICAL_PADDING = 40
+
+/**
+ * Estimates the box height (in canvas px) needed to hold `lineCount` lines of
+ * text at the given point size and line spacing. Pure; used both when slides
+ * are first created and when auto-fit is re-applied after a typography change.
+ */
+export function fitBoxHeight(lineCount: number, fontSizePt: number, lineSpacingPct: number): number {
+  const perLine = fontSizePt * AUTO_FIT_LINE_FACTOR * (lineSpacingPct / 100)
+  return Math.round(Math.max(1, lineCount) * perLine + AUTO_FIT_VERTICAL_PADDING)
+}
+
+/** The top-left `y` (canvas px) that vertically centers a box of the given height. */
+export function centeredBoxY(height: number): number {
+  return Math.round((CANVAS_HEIGHT - height) / 2)
 }
 
 export interface TranslationCacheEntry {
