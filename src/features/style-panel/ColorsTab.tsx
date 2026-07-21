@@ -36,21 +36,48 @@ function ColorField({ label, color, onChange }: ColorFieldProps) {
   )
 }
 
+interface EffectToggleProps {
+  label: string
+  checked: boolean
+  onChange: (next: boolean) => void
+}
+
+function EffectToggle({ label, checked, onChange }: EffectToggleProps) {
+  return (
+    <label className="effect-toggle-row">
+      <span className="effect-toggle-row__label">{label}</span>
+      <input
+        type="checkbox"
+        className="switch"
+        role="switch"
+        aria-label={label}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </label>
+  )
+}
+
 interface ColorsTabProps {
   slide: Slide
 }
 
 /**
- * STYLE panel "Colors" tab: wires the existing `mainText.style.color` /
- * `translationText.style.color` / `Slide.backgroundColor` fields (which had
- * no UI before this pass) to real color pickers. Third-language color and
- * text effects (shadow/outline) would need new data-model fields that are
- * out of scope for this visual-redesign pass, so they're a clearly-labeled
- * placeholder rather than dead controls.
+ * STYLE panel "Colors" tab: wires the per-slide `mainText`/`translationText`
+ * text colors and `Slide.backgroundColor`, the song-level third-language color,
+ * and the shadow/outline effects toggles (which fan out to every slide's text).
  */
 export function ColorsTab({ slide }: ColorsTabProps) {
+  const song = useAppStore((s) => s.song)
   const updateSlideStyle = useAppStore((s) => s.updateSlideStyle)
   const updateSlideBackgroundColor = useAppStore((s) => s.updateSlideBackgroundColor)
+  const setThirdLanguageColor = useAppStore((s) => s.setThirdLanguageColor)
+  const setAllSlidesTextEffect = useAppStore((s) => s.setAllSlidesTextEffect)
+
+  // Effects are stored per text element but presented as one global toggle;
+  // reflect the currently-selected slide's main text as the representative state.
+  const shadowOn = Boolean(slide.mainText.style.textShadow)
+  const outlineOn = Boolean(slide.mainText.style.textOutline)
 
   return (
     <div className="style-tab" data-testid="colors-tab">
@@ -69,7 +96,18 @@ export function ColorsTab({ slide }: ColorsTabProps) {
           onChange={(next) => updateSlideStyle(slide.id, 'translation', { color: next })}
         />
       ) : (
-        <p className="style-tab__hint">Add a translation to set its text color.</p>
+        <div className="color-field-row color-field-row--muted">
+          <span className="color-field-row__label">Translated Text</span>
+          <span className="color-field-row__hint">Add a translation</span>
+        </div>
+      )}
+
+      {song && (
+        <ColorField
+          label="Third Language"
+          color={song.thirdLanguageColor}
+          onChange={(next) => setThirdLanguageColor(next)}
+        />
       )}
 
       <ColorField
@@ -78,10 +116,9 @@ export function ColorsTab({ slide }: ColorsTabProps) {
         onChange={(next) => updateSlideBackgroundColor(slide.id, next)}
       />
 
-      <h3 className="style-tab__section-label--spaced">More Colors</h3>
-      <p className="style-tab__placeholder">
-        Third-language text color and text effects (shadow / outline) are coming in a future update.
-      </p>
+      <h3 className="style-tab__section-label--spaced">Effects</h3>
+      <EffectToggle label="Text Shadow" checked={shadowOn} onChange={(v) => setAllSlidesTextEffect('shadow', v)} />
+      <EffectToggle label="Text Outline" checked={outlineOn} onChange={(v) => setAllSlidesTextEffect('outline', v)} />
     </div>
   )
 }

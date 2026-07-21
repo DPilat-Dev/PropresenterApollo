@@ -1,15 +1,52 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
 import { useAppStore } from '../../state/store'
+import type { Slide } from '../../types/song'
+import { parseSectionHeader } from '../../lib/lyrics/splitLyrics'
 import { SlideListItem } from './SlideListItem'
 
 /**
- * Displays the slides for the current song in the order given by
- * `song.groups[0].slideIds` (the authoritative order — NOT `song.slides`
- * array order, which can drift from display order after merges/splits).
- *
- * Supports reordering via native HTML5 drag-and-drop, multi-select merge via
- * checkboxes, and per-slide midpoint split.
+ * Groups the ordered slides into contiguous runs sharing the same `label`
+ * (section name). Slides with an empty label collapse into a single unnamed
+ * "Slides" run. Each run remembers the global index of its first slide so the
+ * flat drag-reorder indices stay correct across sections.
+ */
+interface SlideSection {
+  name: string
+  type: 'verse' | 'chorus' | 'other'
+  slides: { slide: Slide; index: number }[]
+}
+
+function groupIntoSections(orderedSlides: Slide[]): SlideSection[] {
+  const sections: SlideSection[] = []
+  orderedSlides.forEach((slide, index) => {
+    const name = slide.label.trim()
+    const last = sections[sections.length - 1]
+    if (last && last.name === name) {
+      last.slides.push({ slide, index })
+      return
+    }
+    const parsed = name ? parseSectionHeader(name) : null
+    sections.push({
+      name: name || 'Slides',
+      type: parsed?.type ?? 'other',
+      slides: [{ slide, index }],
+    })
+  })
+  return sections
+}
+
+const BADGE_CLASS: Record<SlideSection['type'], string> = {
+  verse: 'badge--a',
+  chorus: 'badge--b',
+  other: '',
+}
+
+/**
+ * The editor's left "Sections" rail. Shows the current song's slides grouped
+ * into named sections (verse / chorus / …), in the authoritative order from
+ * `song.groups[0].slideIds`. Supports drag reorder, multi-select merge, and
+ * per-slide split/delete.
  */
 export function SlideList() {
   const song = useAppStore((s) => s.song)
@@ -22,9 +59,9 @@ export function SlideList() {
 
   if (!song || song.slides.length === 0) {
     return (
-      <section aria-labelledby="slide-list-heading">
+      <section aria-labelledby="slide-list-heading" className="slide-list">
         <h3 id="slide-list-heading">Sections</h3>
-        <p>Paste lyrics above to get started.</p>
+        <p className="slide-list__empty">Paste lyrics above to get started.</p>
       </section>
     )
   }
@@ -35,6 +72,7 @@ export function SlideList() {
   const orderedSlides = orderedIds
     .map((id) => slidesById.get(id))
     .filter((s): s is NonNullable<typeof s> => s !== undefined)
+  const sections = groupIntoSections(orderedSlides)
 
   const handleToggleMerge = (id: string) => {
     setMergeSelection((prev) => {
@@ -88,21 +126,34 @@ export function SlideList() {
         </button>
       </div>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {orderedSlides.map((slide, index) => (
-          <SlideListItem
-            key={slide.id}
-            slide={slide}
-            index={index}
-            isSelected={selectedSlideId === slide.id}
-            isCheckedForMerge={mergeSelection.has(slide.id)}
-            onToggleMerge={handleToggleMerge}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          />
+      <div className="slide-list__sections">
+        {sections.map((section, si) => (
+          <div className="slide-section" key={`${section.name}-${si}`}>
+            <div className="slide-section__head">
+              <span className={`badge ${BADGE_CLASS[section.type]}`.trim()}>{section.type === 'other' ? 'section' : section.type}</span>
+              <span className="slide-section__name">{section.name}</span>
+              <span className="slide-section__count">
+                {section.slides.length} {section.slides.length === 1 ? 'slide' : 'slides'}
+              </span>
+            </div>
+            <ul className="slide-section__list">
+              {section.slides.map(({ slide, index }) => (
+                <SlideListItem
+                  key={slide.id}
+                  slide={slide}
+                  index={index}
+                  isSelected={selectedSlideId === slide.id}
+                  isCheckedForMerge={mergeSelection.has(slide.id)}
+                  onToggleMerge={handleToggleMerge}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                />
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   )
 }

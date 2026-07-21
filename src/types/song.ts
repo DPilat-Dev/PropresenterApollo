@@ -18,6 +18,8 @@ export interface RGBAColor {
   a: number
 }
 
+export type HorizontalAlignment = 'left' | 'center' | 'right'
+
 export interface TextStyle {
   fontFamily: string
   fontSizePt: number
@@ -26,6 +28,14 @@ export interface TextStyle {
   color: RGBAColor
   bold?: boolean
   italic?: boolean
+  /** Horizontal paragraph alignment. Undefined means "left" for RTF/pro6 output
+   * (so untouched slides export byte-identically to before this field existed);
+   * the on-screen preview treats undefined as centered to match the design. */
+  align?: HorizontalAlignment
+  /** Drop shadow on the text. Undefined/false = no shadow (pro6 drawingShadow=false). */
+  textShadow?: boolean
+  /** Outline/stroke on the text. Undefined/false = no stroke (pro6 drawingStroke=false). */
+  textOutline?: boolean
 }
 
 export type VerticalAlignment = 'top' | 'center' | 'bottom'
@@ -65,14 +75,55 @@ export interface SplitSettings {
   skipBlankLines: boolean
 }
 
+/**
+ * The seven slide-composition presets offered in the STYLE > Layout tab. These
+ * describe how a slide's original / translated / third-language text is
+ * arranged relative to each other. `original-translation` is the default and
+ * matches the historical stacked lower-third layout.
+ */
+export type SlideLayoutPreset =
+  | 'original-translation'
+  | 'two-plus-two'
+  | 'alternating'
+  | 'three-languages'
+  | 'side-by-side'
+  | 'original-only'
+  | 'translation-only'
+
+export interface SlideLayoutPresetMeta {
+  key: SlideLayoutPreset
+  name: string
+  description: string
+}
+
+export const SLIDE_LAYOUT_PRESETS: ReadonlyArray<SlideLayoutPresetMeta> = [
+  { key: 'original-translation', name: 'Original + Translation', description: 'One line original, one line translated below' },
+  { key: 'two-plus-two', name: 'Two + Two', description: 'Two lines original, then two lines translated' },
+  { key: 'alternating', name: 'Alternating', description: 'Original and translation alternate line by line' },
+  { key: 'three-languages', name: 'Three Languages', description: 'Original, translation, and third language stacked' },
+  { key: 'side-by-side', name: 'Side by Side', description: 'Original on left, translation on right' },
+  { key: 'original-only', name: 'Original Only', description: 'Show only the source language' },
+  { key: 'translation-only', name: 'Translation Only', description: 'Show only the translated language' },
+]
+
 export interface Song {
   id: string
   title: string
+  /** Author / artist shown under the title in the editor header. */
+  artist: string
   rawLyrics: string
   splitSettings: SplitSettings
   slides: Slide[]
   groups: SlideGroup[]
   targetLanguage: string | null
+  /** Source (original) language code, shown in the Layout tab's Translation section. */
+  sourceLanguage: string
+  /** Active slide-composition preset (STYLE > Layout). */
+  layout: SlideLayoutPreset
+  /** Color used for a third-language line when a layout that shows one is active. */
+  thirdLanguageColor: RGBAColor
+  /** Whether the song has been "published" (drives the header badge/actions). */
+  published: boolean
   createdAt: string
   updatedAt: string
 }
@@ -102,6 +153,10 @@ export const DEFAULT_MAIN_TEXT_POSITION: Rect3D = { x: 160, y: 560, z: 0, width:
 export const DEFAULT_TRANSLATION_TEXT_POSITION: Rect3D = { x: 160, y: 880, z: 0, width: 1600, height: 160 }
 
 export const DEFAULT_TEXT_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 1 }
+// Warm gold used for translated text in the reference design (#FFD27A).
+export const DEFAULT_TRANSLATION_TEXT_COLOR: RGBAColor = { r: 1, g: 0.823529, b: 0.478431, a: 1 }
+// Soft blue used for a third-language line in the reference design (#8ECDE6).
+export const DEFAULT_THIRD_LANGUAGE_COLOR: RGBAColor = { r: 0.556863, g: 0.803922, b: 0.901961, a: 1 }
 export const DEFAULT_FILL_COLOR: RGBAColor = { r: 1, g: 1, b: 1, a: 0 }
 export const DEFAULT_SLIDE_BACKGROUND: RGBAColor = { r: 0, g: 0, b: 0, a: 1 }
 
@@ -120,5 +175,5 @@ export const DEFAULT_TRANSLATION_TEXT_STYLE: TextStyle = {
   fontFamily: 'Arial',
   fontSizePt: 48,
   lineSpacingPct: 100,
-  color: DEFAULT_TEXT_COLOR,
+  color: DEFAULT_TRANSLATION_TEXT_COLOR,
 }

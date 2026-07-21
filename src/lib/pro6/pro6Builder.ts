@@ -71,8 +71,10 @@ function buildTextElement(el: TextElementState): XmlNode {
       displayDelay: '0.000000',
       displayName: 'TextElement',
       drawLineBackground: 'false',
-      drawingShadow: 'false',
-      drawingStroke: 'false',
+      // Effects toggles (STYLE > Colors). Default false keeps output identical
+      // to before these fields existed; only an explicit true flips them on.
+      drawingShadow: el.style.textShadow ? 'true' : 'false',
+      drawingStroke: el.style.textOutline ? 'true' : 'false',
       fromTemplate: 'true',
       lineFillVerticalOffset: '0.000000',
       locked: 'false',
@@ -174,7 +176,7 @@ export function buildPro6Document(song: Song): XmlNode {
       lastDateUsed: song.updatedAt,
       selectedArrangementID: '',
       os: '1',
-      artist: '',
+      artist: song.artist,
       album: '',
       author: '',
       ccliSongTitle: song.title,

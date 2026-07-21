@@ -5,6 +5,14 @@
   text-align: left;
 }
 
+/* The editor fills the viewport; its side rails scroll internally so the big
+   center stage stays put (matches the reference mockups). */
+.app-shell--editor {
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* ==================== Home page / top nav ==================== */
 
 .app-header {
@@ -46,6 +54,7 @@
   align-items: center;
   gap: 4px;
   flex: 1;
+  justify-content: center;
 }
 
 .app-header__nav-item {
@@ -94,6 +103,32 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+/* Theme selector pill (matches the mockup's "Dark" dropdown). */
+.theme-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 12px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  margin-bottom: 0;
+}
+
+.theme-select select {
+  border: none;
+  background: transparent;
+  padding: 8px 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.theme-select select:focus-visible {
+  box-shadow: none;
 }
 
 .home-page {
@@ -221,12 +256,9 @@
 }
 
 .song-list-header__count {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--color-text-muted);
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-pill);
-  padding: 2px 9px;
 }
 
 .song-manager__new-form {
@@ -242,7 +274,7 @@
 
 .song-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
@@ -265,7 +297,7 @@
 }
 
 .song-card:hover {
-  border-color: var(--color-accent);
+  border-color: var(--color-border-strong);
   box-shadow: var(--shadow-md);
 }
 
@@ -308,22 +340,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
-  background: var(--color-accent-surface);
-  color: var(--color-accent);
-  margin-bottom: 4px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
 }
 
 .song-card__title {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   color: var(--color-text-heading);
 }
 
 .song-manager__updated-at {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
@@ -331,7 +363,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .song-card__delete {
@@ -368,12 +400,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 28px;
+  padding: 12px 24px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  flex-wrap: wrap;
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -381,6 +411,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
 .editor-header__back {
@@ -392,6 +423,14 @@
   padding: 0;
   border-radius: var(--radius-md);
   background: transparent;
+  border-color: transparent;
+}
+
+.editor-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .editor-header__title-row {
@@ -400,10 +439,55 @@
   gap: 10px;
 }
 
+.editor-header__title-row h1 {
+  font-size: 1.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-header__artist {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 1px 4px;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  max-width: 240px;
+}
+
+.editor-header__artist:hover {
+  border-color: var(--color-border);
+}
+
 .editor-header__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.editor-header__history-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.editor-header__coming-soon {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 20;
 }
 
 .autosave-indicator {
@@ -430,73 +514,71 @@
   background: var(--color-danger-surface);
 }
 
-/* ---- Body layout: sections | canvas | style ---- */
+.badge--published {
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: var(--color-success);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+/* ---- Body layout: sections rail | stage | style rail ---- */
 
 .editor-body {
-  display: grid;
-  grid-template-columns: 300px 1fr 340px;
-  gap: 20px;
-  padding: 20px 28px 40px;
-  align-items: start;
   flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px 1fr 360px;
 }
 
-.editor-sections,
-.editor-canvas-col,
-.editor-style-col {
+.editor-rail {
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--color-surface);
+  padding: 18px 16px 32px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-width: 0;
+  gap: 14px;
 }
 
-/* Card treatment applied uniformly to every top-level panel, regardless of
-   whether the underlying component renders a <section> or a <div> - this
-   lets us re-skin the pre-built, unmodified feature components purely from
-   outside via structural selectors. */
-.editor-sections > *,
-.editor-canvas-col > *,
-.editor-style-col > * {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  box-shadow: var(--shadow-sm);
+.editor-rail--left {
+  border-right: 1px solid var(--color-border);
 }
 
-.editor-body h2 {
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--color-border);
+.editor-rail--right {
+  border-left: 1px solid var(--color-border);
+  padding: 18px 18px 32px;
+}
+
+.editor-rail__lyrics-btn {
+  justify-content: center;
+  width: 100%;
+  margin-top: auto;
+  color: var(--color-text-muted) !important;
+}
+
+.editor-rail__lyrics-btn:hover:not(:disabled) {
+  color: var(--color-accent) !important;
+}
+
+/* Uniform section-heading treatment inside both rails. */
+.editor-rail h2,
+.editor-rail h3#slide-list-heading,
+.style-panel > h2 {
   text-transform: uppercase;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   color: var(--color-text-muted);
+  margin: 0;
 }
 
-.editor-sections > * > div,
-.editor-canvas-col > * > div,
-.editor-style-col > * > div {
-  margin-bottom: 12px;
-}
-
-@media (max-width: 1200px) {
-  .editor-body {
-    grid-template-columns: 260px 1fr 300px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .editor-body {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---- Lyrics input ---- */
+/* ---- Lyrics input (rail, no-slides state, and modal) ---- */
 
 #lyrics-textarea {
   width: 100%;
-  min-height: 140px;
+  min-height: 160px;
 }
 
 #lyrics-file-input {
@@ -507,52 +589,106 @@
   width: 90px;
 }
 
-section[aria-labelledby='lyrics-input-heading'] p {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+section[aria-labelledby='lyrics-input-heading'] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* The single top-level "Generate Slides" button is this section's primary action. */
-section[aria-labelledby='lyrics-input-heading'] > button {
-  width: 100%;
-  padding: 10px 16px;
+section[aria-labelledby='lyrics-input-heading'] h2 {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+section[aria-labelledby='lyrics-input-heading'] p {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
   margin-top: 4px;
 }
 
+section[aria-labelledby='lyrics-input-heading'] > button {
+  width: 100%;
+  padding: 10px 16px;
+}
+
 /* ---- Slide list ("Sections") ---- */
+
+.slide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 .slide-list__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.slide-list__header h3 {
-  margin: 0;
-  padding: 0;
-  border: none;
+  gap: 8px;
 }
 
 .slide-list__merge-btn {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   padding: 5px 10px;
 }
 
-.slide-list ul {
+.slide-list__empty {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.slide-list__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.slide-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.slide-section__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slide-section__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slide-section__count {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.slide-section__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .slide-list-item {
-  border: 1px solid var(--color-border) !important;
-  background: var(--color-surface-alt) !important;
-  border-radius: var(--radius-md) !important;
-  padding: 10px 12px !important;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 9px 11px;
   cursor: grab;
   transition:
     box-shadow var(--transition-fast),
@@ -561,14 +697,13 @@ section[aria-labelledby='lyrics-input-heading'] > button {
 }
 
 .slide-list-item:hover {
-  border-color: var(--color-accent) !important;
-  box-shadow: var(--shadow-sm);
+  border-color: var(--color-border-strong);
 }
 
 .slide-list-item[aria-current='true'] {
-  border-color: var(--color-accent) !important;
-  background: var(--color-accent-surface) !important;
-  box-shadow: 0 0 0 3px var(--color-accent-ring);
+  border-color: var(--color-accent);
+  background: var(--color-accent-surface);
+  box-shadow: 0 0 0 2px var(--color-accent-ring);
 }
 
 .slide-list-item__top {
@@ -582,8 +717,9 @@ section[aria-labelledby='lyrics-input-heading'] > button {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   margin-bottom: 0;
+  color: var(--color-text-muted);
 }
 
 .slide-list-item__merge input {
@@ -591,10 +727,11 @@ section[aria-labelledby='lyrics-input-heading'] > button {
 }
 
 .slide-list-item__preview {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-heading);
+  margin-top: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-text);
 }
 
 .slide-list-item__actions {
@@ -604,78 +741,136 @@ section[aria-labelledby='lyrics-input-heading'] > button {
 }
 
 .slide-list-item__actions button {
-  padding: 4px 10px;
-  font-size: 0.75rem;
+  padding: 3px 10px;
+  font-size: 0.72rem;
 }
 
-/* ---- Slide preview ---- */
+/* ---- Center stage: preview + text editor ---- */
 
-section[aria-labelledby='slide-preview-heading'] > div:first-of-type {
+.editor-stage {
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px;
   background: var(--color-bg);
-  border-radius: var(--radius-md);
-  padding: 16px;
+}
+
+.editor-stage__canvas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* The preview component renders a <section> with its own "Preview" heading and
+   nav; in the stage we hide the heading and let the canvas dominate. */
+.editor-stage__canvas section[aria-labelledby='slide-preview-heading'] {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.editor-stage__canvas #slide-preview-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.editor-stage__canvas .slide-preview-canvas,
+.editor-stage__canvas section[aria-labelledby='slide-preview-heading'] > div:first-of-type {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .slide-preview-canvas {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
 }
 
 .slide-preview-canvas__label {
   position: absolute;
-  right: 12px;
-  bottom: 10px;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.55);
+  right: 14px;
+  bottom: 12px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .slide-preview__nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 8px 0 4px;
+  gap: 20px;
+  padding: 4px 0;
 }
 
 .slide-preview__nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border-radius: var(--radius-md);
   background: transparent;
   border-color: transparent;
+  color: var(--color-text-muted);
 }
 
 .slide-preview__counter {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-text-muted);
-  min-width: 56px;
+  color: var(--color-text);
+  min-width: 64px;
   text-align: center;
 }
 
-section[aria-labelledby='slide-preview-heading'] p {
-  margin-top: 10px;
+.editor-stage__canvas section[aria-labelledby='slide-preview-heading'] > p {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
-/* ---- Slide editor (text content only) ---- */
+/* Compact slide-text editor pinned below the stage. */
+.editor-stage__edit {
+  flex-shrink: 0;
+  margin-top: 18px;
+  max-width: 960px;
+  width: 100%;
+  align-self: center;
+}
+
+.slide-editor {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+
+.slide-editor--empty {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
 
 .slide-editor h2 {
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   color: var(--color-text-muted);
+  margin: 0 0 12px;
 }
 
 .slide-editor label[for] {
   display: block;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .slide-editor label[for]:first-of-type {
@@ -684,21 +879,26 @@ section[aria-labelledby='slide-preview-heading'] p {
 
 .slide-editor textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 70px;
   margin-top: 6px;
 }
 
 .slide-editor__no-translation {
-  margin-top: 14px;
+  margin-top: 12px;
   font-size: 0.85rem;
   color: var(--color-text-muted);
 }
 
 /* ---- STYLE panel (Layout / Type / Colors / Quality tabs) ---- */
 
+.style-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .style-panel__tabs {
   width: 100%;
-  margin-bottom: 16px;
 }
 
 .style-panel__tabs .segmented__item {
@@ -708,7 +908,6 @@ section[aria-labelledby='slide-preview-heading'] p {
 
 .style-panel__role-toggle {
   width: 100%;
-  margin-bottom: 16px;
 }
 
 .style-panel__role-toggle .segmented__item {
@@ -721,50 +920,111 @@ section[aria-labelledby='slide-preview-heading'] p {
   color: var(--color-text-muted);
 }
 
-.style-tab h3 {
-  margin-top: 18px;
+.style-tab {
+  display: flex;
+  flex-direction: column;
 }
 
-.style-tab h3:first-child {
-  margin-top: 0;
+.style-tab h3 {
+  margin: 0 0 10px;
 }
 
 .style-tab__section-label--spaced {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
+  margin-top: 22px;
+}
+
+.style-tab select,
+.style-tab > input[type='range'] {
+  width: 100%;
 }
 
 .style-tab__hint,
 .style-tab__placeholder {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--color-text-muted);
   line-height: 1.5;
+  margin-top: 8px;
 }
 
-.style-tab__placeholder {
-  background: var(--color-surface-alt);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-}
-
-.style-tab .style-panel__field {
+.style-panel__field {
   display: block;
-  margin-top: 12px;
+  margin: 0 0 6px;
 }
 
+/* Layout preset cards */
+.layout-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layout-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.layout-preset:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  color: inherit;
+}
+
+.layout-preset--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-surface);
+  box-shadow: 0 0 0 2px var(--color-accent-ring);
+}
+
+.layout-preset__name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-heading);
+}
+
+.layout-preset__desc {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* Alignment segmented control (icons) */
+.style-tab__align {
+  width: 100%;
+}
+
+.style-tab__align .segmented__item {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 0;
+}
+
+/* Colors tab rows */
 .color-field-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.color-field-row:last-of-type {
+  border-bottom: none;
 }
 
 .color-field-row__label {
   flex: 1;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 500;
   color: var(--color-text);
 }
 
@@ -774,12 +1034,45 @@ section[aria-labelledby='slide-preview-heading'] p {
   color: var(--color-text-muted);
 }
 
+.color-field-row__hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.color-field-row--muted .color-field-row__label {
+  color: var(--color-text-muted);
+}
+
+input[type='color'] {
+  width: 34px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+}
+
+/* Effects toggles */
+.effect-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.effect-toggle-row__label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
 /* fieldset (SpacingControls / TextBoxPositionControl) nested inside a tab */
 .style-tab fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 14px 14px;
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
@@ -806,17 +1099,47 @@ section[aria-labelledby='slide-preview-heading'] p {
   width: 100px;
 }
 
-/* Quick Edit + Translation, nested inside the Layout tab (not top-level
-   cards anymore - a subtle divider is enough to separate them). */
+/* Quick Edit + Translation, nested inside the Layout tab. */
 .style-tab .quick-edit-panel,
 .style-tab .translation-panel {
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 22px;
+  padding-top: 18px;
   border-top: 1px solid var(--color-border);
 }
 
+/* The nested TranslationPanel keeps its own <h2> for accessibility/tests, but
+   the Layout tab already introduces the Translation section, so hide it here. */
+.style-tab .translation-panel > h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.style-tab .translation-panel {
+  margin-top: 14px;
+  padding-top: 0;
+  border-top: none;
+}
+
+.style-tab .translation-panel label {
+  display: block;
+  margin-top: 0;
+}
+
 .quick-edit-panel select {
-  width: 160px;
+  width: 100%;
+}
+
+.quick-edit-panel h2 {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
 }
 
 .quick-edit-panel__translation-row {
@@ -852,7 +1175,7 @@ section[aria-labelledby='slide-preview-heading'] p {
 .translation-panel select {
   display: block;
   margin-top: 6px;
-  min-width: 220px;
+  width: 100%;
 }
 
 .translation-panel > button {
@@ -876,4 +1199,85 @@ section[aria-labelledby='slide-preview-heading'] p {
   display: inline-block;
   margin-top: 12px;
   font-size: 0.8rem;
+}
+
+/* ---- Modal (edit lyrics) ---- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 22px 24px 26px;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.modal__header h2 {
+  font-size: 1.05rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-heading);
+}
+
+.modal__close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+.modal__note {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+@media (max-width: 1180px) {
+  .editor-body {
+    grid-template-columns: 260px 1fr 320px;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-shell--editor {
+    height: auto;
+    overflow: visible;
+  }
+
+  .editor-body {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .editor-rail {
+    height: auto;
+    overflow: visible;
+  }
+
+  .editor-stage {
+    height: auto;
+    overflow: visible;
+  }
 }

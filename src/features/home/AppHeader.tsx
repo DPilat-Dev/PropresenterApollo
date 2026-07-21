@@ -1,8 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '../../state/store'
-import { MusicNoteIcon, PlusIcon, SettingsIcon } from '../../components/icons'
+import { MusicNoteIcon, PaletteIcon, PlusIcon, SettingsIcon } from '../../components/icons'
 
 const INERT_NAV_ITEMS = ['Community', 'Team', 'Templates']
+
+type ThemeChoice = 'system' | 'light' | 'dark'
+const THEME_STORAGE_KEY = 'v2s-theme'
+
+/** Theme selector matching the reference mockup's "Dark" dropdown. Persists the
+ * choice and stamps `data-theme` on <html>; "System" removes the override so the
+ * prefers-color-scheme media query takes over. */
+function ThemeSelect() {
+  const [choice, setChoice] = useState<ThemeChoice>('dark')
+
+  useEffect(() => {
+    const stored = (typeof localStorage !== 'undefined' && localStorage.getItem(THEME_STORAGE_KEY)) as ThemeChoice | null
+    if (stored) setChoice(stored)
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (choice === 'system') root.removeAttribute('data-theme')
+    else root.setAttribute('data-theme', choice)
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, choice)
+    } catch {
+      // Ignore storage failures (private mode / disabled storage).
+    }
+  }, [choice])
+
+  return (
+    <label className="theme-select">
+      <PaletteIcon width={15} height={15} />
+      <select aria-label="Theme" value={choice} onChange={(e) => setChoice(e.target.value as ThemeChoice)}>
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  )
+}
 
 /**
  * Top navigation bar shown on the home/song-list screen. "Songs" is the one
@@ -53,6 +90,7 @@ export function AppHeader() {
             {activePlaceholder}: coming soon
           </span>
         )}
+        <ThemeSelect />
         <button
           type="button"
           className="app-header__icon-btn"

@@ -1,6 +1,6 @@
 import { getDb, SONGS_STORE } from './db'
 import type { Song, TextElementState } from '../types/song'
-import { DEFAULT_FILL_COLOR } from '../types/song'
+import { DEFAULT_FILL_COLOR, DEFAULT_THIRD_LANGUAGE_COLOR } from '../types/song'
 
 /**
  * Thrown whenever persistence to/from IndexedDB fails - e.g. the browser
@@ -33,14 +33,22 @@ function backfillFillColor(el: TextElementState): TextElementState {
 }
 
 /**
- * Backfills fields that were added to `TextElementState` after some songs
- * were already persisted (e.g. `fillColor`). Distinct from `isValidSong`,
- * which only checks structural validity - this fills in defaults for
- * records that are valid but predate a schema addition.
+ * Backfills fields that were added after some songs were already persisted -
+ * both on `TextElementState` (e.g. `fillColor`) and, since the design refresh,
+ * on `Song` itself (`artist`, `sourceLanguage`, `layout`, `thirdLanguageColor`,
+ * `published`). Distinct from `isValidSong`, which only checks structural
+ * validity - this fills in defaults for records that are valid but predate a
+ * schema addition. The `??` guards mean a record already carrying these fields
+ * is returned unchanged.
  */
 function normalizeSong(song: Song): Song {
   return {
     ...song,
+    artist: song.artist ?? '',
+    sourceLanguage: song.sourceLanguage ?? 'en',
+    layout: song.layout ?? 'original-translation',
+    thirdLanguageColor: song.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
+    published: song.published ?? false,
     slides: song.slides.map((slide) => ({
       ...slide,
       mainText: backfillFillColor(slide.mainText),

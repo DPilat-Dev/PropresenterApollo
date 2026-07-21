@@ -37,6 +37,11 @@ function makeFixtureSong(overrides?: Partial<Song>): Song {
     slides: [],
     groups: [],
     targetLanguage: null,
+    artist: '',
+    sourceLanguage: 'en',
+    layout: 'original-translation',
+    thirdLanguageColor: { r: 0.556863, g: 0.803922, b: 0.901961, a: 1 },
+    published: false,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -221,6 +226,12 @@ describe('songRepository', () => {
     expect(loaded).toBeDefined()
     expect(loaded!.slides[0].mainText.fillColor).toEqual(DEFAULT_FILL_COLOR)
     expect(loaded!.slides[0].translationText!.fillColor).toEqual(DEFAULT_FILL_COLOR)
+    // Song-level fields added in the design refresh are backfilled too.
+    expect(loaded!.artist).toBe('')
+    expect(loaded!.sourceLanguage).toBe('en')
+    expect(loaded!.layout).toBe('original-translation')
+    expect(loaded!.published).toBe(false)
+    expect(loaded!.thirdLanguageColor).toBeDefined()
 
     const all = await repo.listSongs()
     const listed = all.find((s) => s.id === 'pre-migration-song')

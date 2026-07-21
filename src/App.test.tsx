@@ -29,7 +29,7 @@ describe('App', () => {
 
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: /propresenter/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /worship slides/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /your songs/i })).toBeInTheDocument()
 
     // The editor-only panels must not be present yet.

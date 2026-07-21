@@ -6,11 +6,12 @@ import {
   DEFAULT_MAIN_TEXT_POSITION,
   DEFAULT_MAIN_TEXT_STYLE,
   DEFAULT_SLIDE_BACKGROUND,
+  DEFAULT_THIRD_LANGUAGE_COLOR,
   DEFAULT_TRANSLATION_TEXT_POSITION,
   DEFAULT_TRANSLATION_TEXT_STYLE,
 } from '../types/song'
-import { splitLyrics } from '../lib/lyrics/splitLyrics'
-import type { Slice, SongSlice, TextRole } from './types'
+import { splitLyricsIntoSections } from '../lib/lyrics/splitLyrics'
+import type { Slice, SongSlice, TextEffect, TextRole } from './types'
 import type { VerticalAlignment } from '../types/song'
 
 /** Margin (px) kept between the text box and the canvas edge for top/bottom placement. */
@@ -46,10 +47,10 @@ function createTextElement(role: TextRole, plainText: string): TextElementState 
   }
 }
 
-function createSlideFromLines(lines: string[], order: number): Slide {
+function createSlideFromLines(lines: string[], order: number, label = ''): Slide {
   return {
     id: uuidv4(),
-    label: '',
+    label,
     notes: '',
     enabled: true,
     backgroundColor: { ...DEFAULT_SLIDE_BACKGROUND },
@@ -67,11 +68,16 @@ function emptySong(title: string): Song {
   return {
     id: uuidv4(),
     title,
+    artist: '',
     rawLyrics: '',
     splitSettings: { linesPerSlide: 2, skipBlankLines: true },
     slides: [],
     groups: [],
     targetLanguage: null,
+    sourceLanguage: 'en',
+    layout: 'original-translation',
+    thirdLanguageColor: { ...DEFAULT_THIRD_LANGUAGE_COLOR },
+    published: false,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   }
@@ -186,9 +192,84 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
 
   setSong: (song) => set({ song }),
 
+  setSongTitle: (title) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, title, updatedAt: nowIso() } })
+  },
+
+  setSongArtist: (artist) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, artist, updatedAt: nowIso() } })
+  },
+
+  setSongSourceLanguage: (sourceLanguage) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, sourceLanguage, updatedAt: nowIso() } })
+  },
+
+  setSongLayout: (layout) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, layout, updatedAt: nowIso() } })
+  },
+
+  setSongPublished: (published) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, published, updatedAt: nowIso() } })
+  },
+
+  setThirdLanguageColor: (thirdLanguageColor) => {
+    const song = get().song
+    if (!song) return
+    set({ song: { ...song, thirdLanguageColor, updatedAt: nowIso() } })
+  },
+
+  setAllSlidesTextEffect: (effect: TextEffect, enabled) => {
+    const song = get().song
+    if (!song) return
+    const key = effect === 'shadow' ? 'textShadow' : 'textOutline'
+    const apply = (el: TextElementState): TextElementState => ({
+      ...el,
+      style: { ...el.style, [key]: enabled },
+    })
+    set({
+      song: {
+        ...song,
+        updatedAt: nowIso(),
+        slides: song.slides.map((slide) => ({
+          ...slide,
+          mainText: apply(slide.mainText),
+          translationText: slide.translationText === null ? null : apply(slide.translationText),
+        })),
+      },
+    })
+  },
+
+  updateAllSlidesStyle: (role, styleUpdate) => {
+    const song = get().song
+    if (!song) return
+    set({ song: updateAllElements(song, role, (el) => ({ ...el, style: { ...el.style, ...styleUpdate } })) })
+  },
+
   importLyrics: (rawText, linesPerSlide) => {
-    const chunks = splitLyrics(rawText, linesPerSlide)
-    const slides = chunks.map((lines, index) => createSlideFromLines(lines, index))
+    // Section-aware split: each detected [Verse 1]/Chorus:/… header names the
+    // slides beneath it (stored on Slide.label, used by the sidebar grouping
+    // and the exported pro6 slide label). Lyrics with no headers collapse to a
+    // single unnamed section, i.e. the historical flat behavior.
+    const sections = splitLyricsIntoSections(rawText, linesPerSlide)
+    const slides: Slide[] = []
+    for (const section of sections) {
+      for (const lines of section.slides) {
+        slides.push(createSlideFromLines(lines, slides.length, section.name))
+      }
+    }
+
+    // A single authoritative ordering group (drag-reorder / merge / split all
+    // operate on this one list); section names live on the slides themselves.
     const group: SlideGroup = {
       id: uuidv4(),
       name: 'Slides',
@@ -200,11 +281,16 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
     const song: Song = {
       id: existing?.id ?? uuidv4(),
       title: existing?.title ?? 'Untitled Song',
+      artist: existing?.artist ?? '',
       rawLyrics: rawText,
       splitSettings: { linesPerSlide, skipBlankLines: true },
       slides,
       groups: [group],
       targetLanguage: existing?.targetLanguage ?? null,
+      sourceLanguage: existing?.sourceLanguage ?? 'en',
+      layout: existing?.layout ?? 'original-translation',
+      thirdLanguageColor: existing?.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
+      published: existing?.published ?? false,
       createdAt: existing?.createdAt ?? nowIso(),
       updatedAt: nowIso(),
     }

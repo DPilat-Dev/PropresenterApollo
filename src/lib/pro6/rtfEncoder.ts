@@ -77,6 +77,13 @@ export function encodeRtf(lines: string[], style: TextStyle): string {
   const boldTag = style.bold ? '\\b ' : ''
   const italicTag = style.italic ? '\\i ' : ''
 
+  // Horizontal alignment. Left is RTF's implicit default, so an unset (or
+  // explicitly 'left') align emits nothing - keeping output byte-identical to
+  // before this field existed. Only center/right add a control word.
+  let alignTag = ''
+  if (style.align === 'center') alignTag = '\\qc '
+  else if (style.align === 'right') alignTag = '\\qr '
+
   const paragraphs = lines.length > 0 ? lines : ['']
   const body = paragraphs.map(escapeRtfText).join('\\par ') + '\\par'
 
@@ -85,6 +92,6 @@ export function encodeRtf(lines: string[], style: TextStyle): string {
   return (
     `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 ${fontFamily};}}` +
     `{\\colortbl;\\red${r}\\green${g}\\blue${b};}` +
-    `\\f0\\fs${fontSize}${lineSpacing}\\cf1 ${boldTag}${italicTag}${body}}`
+    `\\f0\\fs${fontSize}${lineSpacing}${alignTag}\\cf1 ${boldTag}${italicTag}${body}}`
   )
 }

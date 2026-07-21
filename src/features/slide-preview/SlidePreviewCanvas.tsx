@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useAppStore } from '../../state/store'
-import type { RGBAColor, Slide, TextElementState, VerticalAlignment } from '../../types/song'
+import type { RGBAColor, SlideLayoutPreset, Slide, TextElementState, VerticalAlignment } from '../../types/song'
 import { CANVAS_WIDTH } from '../../types/song'
 import { pixelToPercent } from './previewGeometry'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons'
@@ -27,19 +27,39 @@ function justifyContentFor(alignment: VerticalAlignment): CSSProperties['justify
   return 'center'
 }
 
-function textElementStyle(el: TextElementState, scale: number): CSSProperties {
+/** Positional overrides used by the "Side by Side" layout preset to place the
+ * main text on the left half and the translation on the right half, without
+ * mutating the slide's stored positions. */
+type PlacementOverride = { leftPct: number; widthPct: number } | undefined
+
+function textElementStyle(
+  el: TextElementState,
+  scale: number,
+  override: PlacementOverride = undefined,
+): CSSProperties {
   const pct = pixelToPercent(el.position)
   const fontSizePx = el.style.fontSizePt * scale * PT_TO_PX
+  const textAlign = el.style.align ?? 'center'
+
+  // Effects: a soft drop shadow and/or a thin outline, both scaled with the
+  // preview so they read the same at any preview size.
+  const shadowPx = Math.max(1, Math.round(3 * scale * PT_TO_PX))
+  const strokePx = Math.max(1, Math.round(1.5 * scale * PT_TO_PX))
+  const textShadow = el.style.textShadow ? `0 ${shadowPx}px ${shadowPx * 1.5}px rgba(0,0,0,0.65)` : undefined
+  const stroke = el.style.textOutline
+    ? { WebkitTextStroke: `${strokePx}px rgba(0,0,0,0.85)` }
+    : {}
 
   return {
     position: 'absolute',
-    left: `${pct.leftPct}%`,
+    left: `${override?.leftPct ?? pct.leftPct}%`,
     top: `${pct.topPct}%`,
-    width: `${pct.widthPct}%`,
+    width: `${override?.widthPct ?? pct.widthPct}%`,
     height: `${pct.heightPct}%`,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: justifyContentFor(el.verticalAlignment),
+    textAlign,
     whiteSpace: 'pre-wrap',
     overflow: 'hidden',
     fontFamily: el.style.fontFamily,
@@ -48,6 +68,8 @@ function textElementStyle(el: TextElementState, scale: number): CSSProperties {
     color: toCssRgba(el.style.color),
     fontWeight: el.style.bold ? 'bold' : 'normal',
     fontStyle: el.style.italic ? 'italic' : 'normal',
+    textShadow,
+    ...stroke,
     opacity: el.opacity,
     transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
   }
@@ -121,6 +143,14 @@ export function SlidePreviewCanvas() {
   const scale = renderedWidth / CANVAS_WIDTH
   const displayLabel = slide && slide.label.trim().length > 0 ? slide.label : slide ? `Slide ${slideIndex + 1}` : ''
 
+  // Layout preset drives which roles show and, for "Side by Side", where.
+  const layout: SlideLayoutPreset = song?.layout ?? 'original-translation'
+  const showMain = layout !== 'translation-only'
+  const showTranslation = layout !== 'original-only'
+  const sideBySide = layout === 'side-by-side'
+  const mainOverride: PlacementOverride = sideBySide ? { leftPct: 4, widthPct: 44 } : undefined
+  const translationOverride: PlacementOverride = sideBySide ? { leftPct: 52, widthPct: 44 } : undefined
+
   const goToOffset = (offset: number) => {
     if (slideIndex === -1) return
     const nextIndex = slideIndex + offset
@@ -147,13 +177,15 @@ export function SlidePreviewCanvas() {
               background: toCssRgba(slide.backgroundColor),
             }}
           >
-            <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale)}>
-              {slide.mainText.plainText}
-            </div>
-            {slide.translationText !== null && (
+            {showMain && (
+              <div data-testid="slide-preview-main-text" style={textElementStyle(slide.mainText, scale, mainOverride)}>
+                {slide.mainText.plainText}
+              </div>
+            )}
+            {slide.translationText !== null && showTranslation && (
               <div
                 data-testid="slide-preview-translation-text"
-                style={textElementStyle(slide.translationText, scale)}
+                style={textElementStyle(slide.translationText, scale, translationOverride)}
               >
                 {slide.translationText.plainText}
               </div>

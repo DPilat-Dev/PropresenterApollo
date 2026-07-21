@@ -1,17 +1,26 @@
 import type { StateCreator } from 'zustand'
-import type { RGBAColor, Song, TextStyle, Rect3D, VerticalAlignment } from '../types/song'
+import type { RGBAColor, SlideLayoutPreset, Song, TextStyle, Rect3D, VerticalAlignment } from '../types/song'
 import type { TranslationProvider } from '../lib/translation/types'
 import type { TranslationCache } from '../types/song'
 
 export type TextRole = 'main' | 'translation'
+export type TextEffect = 'shadow' | 'outline'
 
 export interface SongSlice {
   song: Song | null
   newSong: (title: string) => void
   importLyrics: (rawText: string, linesPerSlide: number) => void
   setSong: (song: Song) => void
+  setSongTitle: (title: string) => void
+  setSongArtist: (artist: string) => void
+  setSongSourceLanguage: (lang: string) => void
+  setSongLayout: (layout: SlideLayoutPreset) => void
+  setSongPublished: (published: boolean) => void
+  setThirdLanguageColor: (color: RGBAColor) => void
+  setAllSlidesTextEffect: (effect: TextEffect, enabled: boolean) => void
   updateSlideText: (slideId: string, role: TextRole, plainText: string) => void
   updateSlideStyle: (slideId: string, role: TextRole, style: Partial<TextStyle>) => void
+  updateAllSlidesStyle: (role: TextRole, style: Partial<TextStyle>) => void
   updateSlidePosition: (slideId: string, role: TextRole, position: Rect3D) => void
   updateSlideVerticalAlignment: (slideId: string, role: TextRole, alignment: VerticalAlignment) => void
   updateSlideBackgroundColor: (slideId: string, color: RGBAColor) => void

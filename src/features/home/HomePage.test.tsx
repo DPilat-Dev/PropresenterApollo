@@ -32,6 +32,11 @@ function makeFixtureSong(overrides?: Partial<Song>): Song {
     slides: [],
     groups: [],
     targetLanguage: null,
+    artist: '',
+    sourceLanguage: 'en',
+    layout: 'original-translation',
+    thirdLanguageColor: { r: 0.556863, g: 0.803922, b: 0.901961, a: 1 },
+    published: false,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -56,8 +61,8 @@ describe('HomePage', () => {
   it('renders the landing content describing the tool when no song is loaded', async () => {
     render(<HomePage />)
 
-    expect(screen.getByRole('heading', { name: /propresenter/i })).toBeInTheDocument()
-    expect(screen.getByText(/paste in song lyrics/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /worship slides/i })).toBeInTheDocument()
+    expect(screen.getByText(/paste lyrics/i)).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: /primary/i })).toBeInTheDocument()
 
     // Song list panel is reused as-is.

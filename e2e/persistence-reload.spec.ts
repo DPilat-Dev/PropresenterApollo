@@ -17,9 +17,9 @@ test.describe('persistence across reload', () => {
     // App.tsx / songSlice.ts do not auto-restore the most recent song on
     // startup - `song` starts as `null` again after a reload, so the app
     // shows the home/landing view again. The user must explicitly load the
-    // song from the Song Manager's "Saved Songs" list there (which refreshes
+    // song from the Song Manager's "Your Songs" list there (which refreshes
     // itself from IndexedDB on mount) to get back into the editor.
-    await expect(page.getByRole('heading', { name: 'Saved Songs' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /your songs/i })).toBeVisible()
 
     const loadButton = page.locator('[data-testid^="load-song-"]').first()
     await expect(loadButton).toBeVisible({ timeout: 10_000 })
@@ -40,8 +40,8 @@ test.describe('persistence across reload', () => {
     // storage) by default, so no explicit context/storage reset is needed here.
     await page.goto('/')
 
-    await expect(page.getByRole('heading', { name: 'Lyrics → ProPresenter 6' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /how it works/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /worship slides/i })).toBeVisible()
+    await expect(page.getByRole('navigation', { name: /primary/i })).toBeVisible()
     await expect(page.getByText('No saved songs yet.')).toBeVisible()
     // The editor shell (only reachable once a song exists) must not be shown yet.
     await expect(page.getByLabel(/paste lyrics/i)).toHaveCount(0)

@@ -9,7 +9,7 @@ const DEFAULT_LINES_PER_SLIDE = 2
  * text into the store via `importLyrics`, which creates the song implicitly
  * if one doesn't exist yet.
  */
-export function LyricsInput() {
+export function LyricsInput({ onImported }: { onImported?: () => void } = {}) {
   const importLyrics = useAppStore((s) => s.importLyrics)
 
   const [text, setText] = useState('')
@@ -34,6 +34,7 @@ export function LyricsInput() {
   const handleImport = () => {
     if (text.trim().length === 0) return
     importLyrics(text, linesPerSlide)
+    onImported?.()
   }
 
   const handleLinesPerSlideChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -20,11 +20,10 @@ export function HomePage() {
 
       <div className="home-page__content">
         <section className="home-hero" aria-labelledby="home-hero-heading">
-          <h1 id="home-hero-heading">Turn lyrics into ProPresenter slides.</h1>
+          <h1 id="home-hero-heading">Worship slides in seconds, in any language.</h1>
           <p className="home-hero__tagline">
-            Paste in song lyrics, split them into slides, fine-tune spacing and alignment, optionally
-            auto-translate, and export a real ProPresenter 6 (.pro6) file — all in your browser. No account,
-            no server, no upload.
+            Paste lyrics, let the app detect verses and choruses, translate to any language, and build
+            beautiful ProPresenter-ready slides — all in your browser. No account, no server, no upload.
           </p>
           <button
             type="button"

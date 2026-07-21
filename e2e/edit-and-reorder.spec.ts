@@ -52,11 +52,13 @@ test.describe('edit slide and preview wiring', () => {
 
     await selectSlideAt(page, 0)
 
+    // Font size lives on the STYLE panel's "Type" tab (a slider).
+    await page.getByRole('tab', { name: 'Type' }).click()
+
     const fontSizeInput = page.getByLabel('Main text font size')
     await expect(fontSizeInput).toHaveValue('60') // DEFAULT_MAIN_TEXT_STYLE.fontSizePt
 
     await fontSizeInput.fill('80')
-    await fontSizeInput.blur()
 
     await expect(fontSizeInput).toHaveValue('80')
 
