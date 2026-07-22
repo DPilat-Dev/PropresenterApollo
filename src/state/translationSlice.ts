@@ -22,8 +22,6 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
     const targetLanguage = get().targetLanguage
     if (!targetLanguage) return
 
-    const sourceText = slide.mainText.plainText
-
     set((state) => {
       const { [slideId]: _removed, ...remainingErrors } = state.translationErrors
       return {
@@ -33,15 +31,23 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
     })
 
     try {
-      const result = await translateText(
-        get().provider,
-        get().cache,
-        sourceText,
-        get().sourceLanguage,
-        targetLanguage,
-      )
-      set({ cache: result.cache })
-      get().updateSlideText(slideId, 'translation', result.translatedText)
+      // Translate line by line (blank lines pass through untouched). Each line
+      // is cached by its own text, so the same line reused across a re-split -
+      // or shared between slides - is only ever fetched once.
+      const lines = slide.mainText.plainText.split('\n')
+      let cache = get().cache
+      const translated: string[] = []
+      for (const line of lines) {
+        if (line.trim() === '') {
+          translated.push('')
+          continue
+        }
+        const result = await translateText(get().provider, cache, line, get().sourceLanguage, targetLanguage)
+        cache = result.cache
+        translated.push(result.translatedText)
+      }
+      set({ cache })
+      get().updateSlideText(slideId, 'translation', translated.join('\n'))
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       set((state) => ({ translationErrors: { ...state.translationErrors, [slideId]: message } }))
@@ -49,6 +55,39 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
       set((state) => ({
         translatingSlideIds: state.translatingSlideIds.filter((id) => id !== slideId),
       }))
+    }
+  },
+
+  rebuildTranslationsFromCache: () => {
+    const song = get().song
+    const targetLanguage = get().targetLanguage
+    if (!song || !targetLanguage) return
+    const sourceLanguage = get().sourceLanguage
+    const cache = get().cache
+
+    for (const slide of song.slides) {
+      const lines = slide.mainText.plainText.split('\n')
+      const translated: string[] = []
+      let complete = true
+      let anyLine = false
+      for (const line of lines) {
+        if (line.trim() === '') {
+          translated.push('')
+          continue
+        }
+        anyLine = true
+        const entry = getCached(cache, sourceLanguage, targetLanguage, line)
+        if (!entry) {
+          complete = false
+          break
+        }
+        translated.push(entry.translatedText)
+      }
+      // Only fill a slide whose every line is already cached (leave the rest for
+      // an explicit translate); never make a network call here.
+      if (complete && anyLine) {
+        get().updateSlideText(slide.id, 'translation', translated.join('\n'))
+      }
     }
   },
 

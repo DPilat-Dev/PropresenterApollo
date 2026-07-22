@@ -33,7 +33,7 @@ export function LayoutTab() {
   const setSongLayout = useAppStore((s) => s.setSongLayout)
   const setSongSourceLanguage = useAppStore((s) => s.setSongSourceLanguage)
   const targetLanguage = useAppStore((s) => s.targetLanguage)
-  const translateAllSlides = useAppStore((s) => s.translateAllSlides)
+  const rebuildTranslationsFromCache = useAppStore((s) => s.rebuildTranslationsFromCache)
 
   const activeLayout = song?.layout ?? 'original-translation'
   const linesPerSlide = song?.splitSettings.linesPerSlide ?? 2
@@ -41,19 +41,17 @@ export function LayoutTab() {
 
   // The slider updates a local value immediately for responsiveness, but the
   // (destructive) re-split is debounced so dragging doesn't re-split on every
-  // step. After re-splitting we re-apply translations - cached slide texts
-  // resolve instantly, only genuinely-new splits hit the network - so tweaking
-  // the split no longer wipes out the song's translations.
+  // step. After re-splitting we rebuild translations straight from the per-line
+  // cache - no API calls - so regrouping lines never re-translates.
   const [pendingLines, setPendingLines] = useState(linesPerSlide)
   useEffect(() => setPendingLines(linesPerSlide), [linesPerSlide])
 
   useEffect(() => {
     if (!song || pendingLines === song.splitSettings.linesPerSlide) return
     const raw = song.rawLyrics
-    const hadTranslation = song.slides.some((s) => s.translationText !== null)
     const timer = setTimeout(() => {
       importLyrics(raw, pendingLines)
-      if (targetLanguage && hadTranslation) void translateAllSlides()
+      if (targetLanguage) rebuildTranslationsFromCache()
     }, 350)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps

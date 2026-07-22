@@ -29,7 +29,9 @@ test.describe('translation', () => {
     })
 
     await page.goto('/')
-    await generateSlides(page, 'Hello world line one\nHello world line two')
+    // A single-line slide: translation is now per-line, so one line == one API
+    // request, which keeps the request-count assertions below exact.
+    await generateSlides(page, 'Hello world line one')
 
     await selectSlideAt(page, 0)
 

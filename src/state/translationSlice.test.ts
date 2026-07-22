@@ -59,6 +59,39 @@ describe('translationSlice via useAppStore', () => {
     expect(useAppStore.getState().translatingSlideIds).toHaveLength(0)
   })
 
+  it('translateSlide translates a multi-line slide line by line', async () => {
+    useAppStore.getState().importLyrics('hello\nworld', 2)
+    useAppStore.getState().setTargetLanguage('es')
+    const slideId = useAppStore.getState().song!.slides[0].id
+
+    await useAppStore.getState().translateSlide(slideId)
+
+    const slide = useAppStore.getState().song!.slides.find((s) => s.id === slideId)!
+    expect(slide.translationText!.plainText).toBe('[es] hello\n[es] world')
+  })
+
+  it('rebuildTranslationsFromCache restores translations after a re-split without any API calls', async () => {
+    useAppStore.getState().importLyrics('hello\nworld', 1)
+    useAppStore.getState().setTargetLanguage('es')
+    await useAppStore.getState().translateAllSlides()
+
+    // Any network call from here on is a failure: the per-line cache must cover
+    // the re-split entirely.
+    server.use(
+      http.get(MYMEMORY_ENDPOINT, () => {
+        throw new Error('rebuildTranslationsFromCache must not hit the API')
+      }),
+    )
+
+    useAppStore.getState().importLyrics('hello\nworld', 2)
+    expect(useAppStore.getState().song!.slides).toHaveLength(1)
+
+    useAppStore.getState().rebuildTranslationsFromCache()
+
+    const slide = useAppStore.getState().song!.slides[0]
+    expect(slide.translationText!.plainText).toBe('[es] hello\n[es] world')
+  })
+
   it('setTranslationOverride survives a subsequent translateAllSlides bulk re-translate', async () => {
     useAppStore.getState().importLyrics('hello\nworld', 1)
     useAppStore.getState().setTargetLanguage('es')

@@ -55,6 +55,9 @@ export interface TranslationSlice {
   setTargetLanguage: (lang: string | null) => void
   translateSlide: (slideId: string) => Promise<void>
   translateAllSlides: () => Promise<void>
+  /** Rebuilds every slide's translation from the per-line cache without any API
+   * calls - used after a re-split so regrouping lines never re-translates. */
+  rebuildTranslationsFromCache: () => void
   setTranslationOverride: (slideId: string, text: string) => void
 }
 
