@@ -67,10 +67,36 @@ function estimateWrappedLines(text: string, width: number, fontSizePt: number): 
   return Math.max(1, lines)
 }
 
-/** Box height (canvas px) needed to hold `el`'s text wrapped inside `width` px. */
-function boxHeightForWidth(el: TextElementState, width: number): number {
-  const lines = estimateWrappedLines(el.plainText, width, el.style.fontSizePt)
-  return fitBoxHeight(lines, el.style.fontSizePt, el.style.lineSpacingPct)
+/** `el`'s point size shrunk by `scale` (never below 1pt). */
+function scaledFontSize(el: TextElementState, scale: number): number {
+  return Math.max(1, Math.round(el.style.fontSizePt * scale))
+}
+
+/** Box height (canvas px) needed to hold `el`'s text wrapped inside `width` px,
+ * at `scale` x its chosen point size. */
+function boxHeightForWidth(el: TextElementState, width: number, scale = 1): number {
+  const size = scaledFontSize(el, scale)
+  return fitBoxHeight(estimateWrappedLines(el.plainText, width, size), size, el.style.lineSpacingPct)
+}
+
+// Vertical breathing room kept clear at the top and bottom of the canvas, and
+// the smallest fraction of the chosen point size auto-fit will shrink text to.
+const CANVAS_MARGIN = 30
+const MIN_FIT_SCALE = 0.4
+
+/**
+ * Largest scale in (MIN_FIT_SCALE..1] at which `measure` fits the canvas height.
+ * Found by stepping down rather than solving directly: shrinking the font also
+ * changes how many display lines the text wraps to, so height isn't a linear
+ * function of scale.
+ */
+function fitScale(measure: (scale: number) => number): number {
+  const available = CANVAS_HEIGHT - CANVAS_MARGIN * 2
+  let scale = 1
+  while (scale > MIN_FIT_SCALE && measure(scale) > available) {
+    scale = Math.round((scale - 0.05) * 100) / 100
+  }
+  return scale
 }
 
 // Full-width text-box geometry (canvas px) used by every stacked layout.
@@ -99,8 +125,25 @@ function layoutFamily(
   }
 }
 
-function placeBox(el: TextElementState, x: number, width: number, y: number, height: number): TextElementState {
-  return { ...el, position: { ...el.position, x, width, y, height }, verticalAlignment: 'center' }
+function placeBox(
+  el: TextElementState,
+  x: number,
+  width: number,
+  y: number,
+  height: number,
+  scale = 1,
+): TextElementState {
+  const size = scaledFontSize(el, scale)
+  const placed: TextElementState = {
+    ...el,
+    position: { ...el.position, x, width, y, height },
+    verticalAlignment: 'center',
+    fittedFontSizePt: size,
+  }
+  // Full size is the common case; leave the field off entirely so exports of
+  // unshrunk slides stay byte-identical to before auto-fit existed.
+  if (size === el.style.fontSizePt) delete placed.fittedFontSizePt
+  return placed
 }
 
 /**
@@ -119,55 +162,77 @@ function autoLayoutSlide(slide: Slide, layout: SlideLayoutPreset): Slide {
   if (family === 'side-by-side' && translation) {
     const half = CANVAS_WIDTH / 2
     const colWidth = half - SIDE_MARGIN - SIDE_GAP / 2
-    const mainHeight = boxHeightForWidth(slide.mainText, colWidth)
-    const translationHeight = boxHeightForWidth(translation, colWidth)
+    // The columns are independent, so each only has to fit on its own.
+    const scale = fitScale((s) =>
+      Math.max(boxHeightForWidth(slide.mainText, colWidth, s), boxHeightForWidth(translation, colWidth, s)),
+    )
+    const mainHeight = boxHeightForWidth(slide.mainText, colWidth, scale)
+    const translationHeight = boxHeightForWidth(translation, colWidth, scale)
     return {
       ...slide,
-      mainText: placeBox(slide.mainText, SIDE_MARGIN, colWidth, centeredBoxY(mainHeight), mainHeight),
-      translationText: placeBox(translation, half + SIDE_GAP / 2, colWidth, centeredBoxY(translationHeight), translationHeight),
+      mainText: placeBox(slide.mainText, SIDE_MARGIN, colWidth, centeredBoxY(mainHeight), mainHeight, scale),
+      translationText: placeBox(translation, half + SIDE_GAP / 2, colWidth, centeredBoxY(translationHeight), translationHeight, scale),
     }
   }
-
-  const mainHeight = boxHeightForWidth(slide.mainText, FULL_WIDTH)
 
   // Interleaved (Alternating / Two + Two): the original and translated lines
   // are woven into one block (rendered/exported from the main box), so size the
   // main box to hold every line from both languages, centered.
   if (family === 'interleaved' && translation) {
-    const combinedLines =
-      estimateWrappedLines(slide.mainText.plainText, FULL_WIDTH, slide.mainText.style.fontSizePt) +
-      estimateWrappedLines(translation.plainText, FULL_WIDTH, translation.style.fontSizePt)
-    const height = fitBoxHeight(combinedLines, slide.mainText.style.fontSizePt, slide.mainText.style.lineSpacingPct)
+    const combinedHeight = (s: number) => {
+      const mainSize = scaledFontSize(slide.mainText, s)
+      const lines =
+        estimateWrappedLines(slide.mainText.plainText, FULL_WIDTH, mainSize) +
+        estimateWrappedLines(translation.plainText, FULL_WIDTH, scaledFontSize(translation, s))
+      return fitBoxHeight(lines, mainSize, slide.mainText.style.lineSpacingPct)
+    }
+    const scale = fitScale(combinedHeight)
+    const height = combinedHeight(scale)
     const y = centeredBoxY(height)
     return {
       ...slide,
-      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, y, height),
+      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, y, height, scale),
       // Keep the translation box co-located with the main box; it isn't drawn
       // separately in this family (its lines are woven into the main block).
-      translationText: placeBox(translation, FULL_X, FULL_WIDTH, y, height),
+      translationText: placeBox(translation, FULL_X, FULL_WIDTH, y, height, scale),
     }
   }
 
-  // Stacked with a translation: center the main+gap+translation block together.
+  // Stacked with a translation: center the main+gap+translation block together,
+  // shrinking both to fit if the pair would otherwise run off the canvas.
   if (family === 'stacked' && translation) {
-    const translationHeight = boxHeightForWidth(translation, FULL_WIDTH)
+    const scale = fitScale(
+      (s) => boxHeightForWidth(slide.mainText, FULL_WIDTH, s) + CLAMP_GAP + boxHeightForWidth(translation, FULL_WIDTH, s),
+    )
+    const mainHeight = boxHeightForWidth(slide.mainText, FULL_WIDTH, scale)
+    const translationHeight = boxHeightForWidth(translation, FULL_WIDTH, scale)
     const blockTop = centeredBoxY(mainHeight + CLAMP_GAP + translationHeight)
     return {
       ...slide,
-      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, blockTop, mainHeight),
-      translationText: placeBox(translation, FULL_X, FULL_WIDTH, blockTop + mainHeight + CLAMP_GAP, translationHeight),
+      mainText: placeBox(slide.mainText, FULL_X, FULL_WIDTH, blockTop, mainHeight, scale),
+      translationText: placeBox(translation, FULL_X, FULL_WIDTH, blockTop + mainHeight + CLAMP_GAP, translationHeight, scale),
     }
   }
 
   // main-only, translation-only, or no translation: center each (visible) box on
   // its own. Hidden boxes are still centered so switching layouts stays sane.
-  const mainText = placeBox(slide.mainText, FULL_X, FULL_WIDTH, centeredBoxY(mainHeight), mainHeight)
+  const mainScale = fitScale((s) => boxHeightForWidth(slide.mainText, FULL_WIDTH, s))
+  const mainHeight = boxHeightForWidth(slide.mainText, FULL_WIDTH, mainScale)
+  const mainText = placeBox(slide.mainText, FULL_X, FULL_WIDTH, centeredBoxY(mainHeight), mainHeight, mainScale)
   if (!translation) return { ...slide, mainText }
-  const translationHeight = boxHeightForWidth(translation, FULL_WIDTH)
+  const translationScale = fitScale((s) => boxHeightForWidth(translation, FULL_WIDTH, s))
+  const translationHeight = boxHeightForWidth(translation, FULL_WIDTH, translationScale)
   return {
     ...slide,
     mainText,
-    translationText: placeBox(translation, FULL_X, FULL_WIDTH, centeredBoxY(translationHeight), translationHeight),
+    translationText: placeBox(
+      translation,
+      FULL_X,
+      FULL_WIDTH,
+      centeredBoxY(translationHeight),
+      translationHeight,
+      translationScale,
+    ),
   }
 }
 

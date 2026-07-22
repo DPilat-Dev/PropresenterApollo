@@ -455,4 +455,40 @@ describe('songSlice via useAppStore', () => {
       expect(useAppStore.getState().song).toBeNull()
     })
   })
+
+  describe('auto-fit shrink-to-fit', () => {
+    const LINE = 'this is a fairly long lyric line that will wrap'
+
+    it('keeps a main+translation block inside the canvas at every lines-per-slide', () => {
+      const lyrics = Array.from({ length: 16 }, (_, i) => `${LINE} ${i + 1}`).join('\n')
+
+      for (const linesPerSlide of [1, 2, 3, 4, 5, 6, 7, 8]) {
+        useAppStore.getState().importLyrics(lyrics, linesPerSlide)
+        for (const slide of useAppStore.getState().song!.slides) {
+          useAppStore.getState().updateSlideText(slide.id, 'translation', slide.mainText.plainText)
+        }
+
+        for (const slide of useAppStore.getState().song!.slides) {
+          const main = slide.mainText.position
+          const translation = slide.translationText!.position
+          expect(main.y, `main off top at ${linesPerSlide} lines/slide`).toBeGreaterThanOrEqual(0)
+          expect(
+            translation.y + translation.height,
+            `translation off the bottom at ${linesPerSlide} lines/slide`,
+          ).toBeLessThanOrEqual(CANVAS_HEIGHT)
+        }
+      }
+    })
+
+    it('leaves fittedFontSizePt unset when the content already fits, and shrinks it when it does not', () => {
+      useAppStore.getState().importLyrics('short line', 1)
+      const smallSlide = useAppStore.getState().song!.slides[0]
+      expect(smallSlide.mainText.fittedFontSizePt).toBeUndefined()
+
+      const many = Array.from({ length: 10 }, (_, i) => `${LINE} ${i + 1}`).join('\n')
+      useAppStore.getState().importLyrics(many, 10)
+      const bigSlide = useAppStore.getState().song!.slides[0]
+      expect(bigSlide.mainText.fittedFontSizePt).toBeLessThan(bigSlide.mainText.style.fontSizePt)
+    })
+  })
 })

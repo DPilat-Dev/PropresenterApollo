@@ -1,5 +1,5 @@
-import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState, VerticalAlignment } from '../../types/song'
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../../types/song'
+import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState, TextStyle, VerticalAlignment } from '../../types/song'
+import { CANVAS_HEIGHT, CANVAS_WIDTH, renderFontSize } from '../../types/song'
 import type { XmlNode } from './xmlSerializer'
 import { serializeXml } from './xmlSerializer'
 import { serializeRect3D } from './rect3d'
@@ -104,8 +104,15 @@ function buildTextElementNode(el: TextElementState, rtf: string, plainText: stri
   }
 }
 
+/** The element's style at the size auto-layout actually fitted it to, so exported
+ * text matches the preview instead of overflowing the slide. */
+function fittedStyle(el: TextElementState): TextStyle {
+  const size = renderFontSize(el)
+  return size === el.style.fontSizePt ? el.style : { ...el.style, fontSizePt: size }
+}
+
 function buildTextElement(el: TextElementState): XmlNode {
-  return buildTextElementNode(el, encodeRtf(el.plainText.split('\n'), el.style), el.plainText)
+  return buildTextElementNode(el, encodeRtf(el.plainText.split('\n'), fittedStyle(el)), el.plainText)
 }
 
 /**
@@ -116,7 +123,9 @@ function buildTextElement(el: TextElementState): XmlNode {
  */
 function buildInterleavedElement(main: TextElementState, translation: TextElementState, groupSize: number): XmlNode {
   const lines = interleaveLines(main.plainText, translation.plainText, groupSize)
-  const segments = lines.map((line) => ({ text: line.text, style: line.role === 'main' ? main.style : translation.style }))
+  const mainStyle = fittedStyle(main)
+  const translationStyle = fittedStyle(translation)
+  const segments = lines.map((line) => ({ text: line.text, style: line.role === 'main' ? mainStyle : translationStyle }))
   const plainText = lines.map((line) => line.text).join('\n')
   return buildTextElementNode(main, encodeRtfMixed(segments), plainText)
 }

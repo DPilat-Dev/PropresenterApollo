@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useAppStore } from '../../state/store'
 import type { RGBAColor, SlideLayoutPreset, Slide, TextElementState, VerticalAlignment } from '../../types/song'
-import { CANVAS_WIDTH } from '../../types/song'
+import { CANVAS_WIDTH, renderFontSize } from '../../types/song'
 import { pixelToPercent } from './previewGeometry'
 import { interleaveGroupSize, interleaveLines, isInterleavedLayout } from '../../lib/layout/interleave'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../components/icons'
@@ -30,7 +30,7 @@ function justifyContentFor(alignment: VerticalAlignment): CSSProperties['justify
 
 function textElementStyle(el: TextElementState, scale: number): CSSProperties {
   const pct = pixelToPercent(el.position)
-  const fontSizePx = el.style.fontSizePt * scale * PT_TO_PX
+  const fontSizePx = renderFontSize(el) * scale * PT_TO_PX
   const textAlign = el.style.align ?? 'center'
 
   // Effects: a soft drop shadow and/or a thin outline, both scaled with the
@@ -70,7 +70,7 @@ function textElementStyle(el: TextElementState, scale: number): CSSProperties {
 /** Text styling (no positioning) for one woven line in an interleaved layout,
  * taken from whichever role that line belongs to. */
 function lineTextStyle(el: TextElementState, scale: number): CSSProperties {
-  const fontSizePx = el.style.fontSizePt * scale * PT_TO_PX
+  const fontSizePx = renderFontSize(el) * scale * PT_TO_PX
   const shadowPx = Math.max(1, Math.round(3 * scale * PT_TO_PX))
   const strokePx = Math.max(1, Math.round(1.5 * scale * PT_TO_PX))
   return {

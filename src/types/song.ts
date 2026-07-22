@@ -46,6 +46,13 @@ export interface TextElementState {
   plainText: string
   position: Rect3D
   style: TextStyle
+  /**
+   * Point size actually used for rendering and export, set by auto-layout when
+   * the content would otherwise overflow the 1080px-tall canvas. `style.fontSizePt`
+   * stays the user's chosen size (the maximum); this is the shrunk-to-fit result.
+   * Absent whenever the content fits at full size, so exports are unchanged.
+   */
+  fittedFontSizePt?: number
   fillColor: RGBAColor
   verticalAlignment: VerticalAlignment
   opacity: number
@@ -144,6 +151,12 @@ const AUTO_FIT_VERTICAL_PADDING = 40
 export function fitBoxHeight(lineCount: number, fontSizePt: number, lineSpacingPct: number): number {
   const perLine = fontSizePt * AUTO_FIT_LINE_FACTOR * (lineSpacingPct / 100)
   return Math.round(Math.max(1, lineCount) * perLine + AUTO_FIT_VERTICAL_PADDING)
+}
+
+/** The point size to actually draw/export `el` at: the shrunk-to-fit size when
+ * auto-layout had to reduce it, otherwise the user's chosen size. */
+export function renderFontSize(el: TextElementState): number {
+  return el.fittedFontSizePt ?? el.style.fontSizePt
 }
 
 /** The top-left `y` (canvas px) that vertically centers a box of the given height. */
