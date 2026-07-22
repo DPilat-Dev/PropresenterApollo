@@ -46,6 +46,7 @@ function normalizeSong(song: Song): Song {
     ...song,
     artist: song.artist ?? '',
     sourceLanguage: song.sourceLanguage ?? 'en',
+    translationCache: song.translationCache ?? {},
     layout: song.layout ?? 'original-translation',
     thirdLanguageColor: song.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
     published: song.published ?? false,

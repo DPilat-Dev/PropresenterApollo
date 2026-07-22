@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState } from '../types/song'
+import type { Slide, SlideGroup, SlideLayoutPreset, Song, TextElementState, TranslationCache } from '../types/song'
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -12,6 +12,7 @@ import {
   DEFAULT_TRANSLATION_TEXT_POSITION,
   DEFAULT_TRANSLATION_TEXT_STYLE,
   fitBoxHeight,
+  translationCacheKey,
 } from '../types/song'
 import { splitLyricsIntoSections } from '../lib/lyrics/splitLyrics'
 import type { Slice, SongSlice, TextEffect, TextRole } from './types'
@@ -265,6 +266,7 @@ function emptySong(title: string): Song {
     groups: [],
     targetLanguage: null,
     sourceLanguage: 'en',
+    translationCache: {},
     layout: 'original-translation',
     thirdLanguageColor: { ...DEFAULT_THIRD_LANGUAGE_COLOR },
     published: false,
@@ -376,12 +378,56 @@ function updateAllSlidesPlacementClampedSong(song: Song, zone: VerticalAlignment
   }
 }
 
+/**
+ * Returns the song's saved per-line translation cache, topped up with entries
+ * recovered from the slides themselves.
+ *
+ * The recovery pass exists for songs saved before the cache was persisted: a
+ * slide whose main and translation text have the same number of lines is a
+ * reliable line-by-line pairing, so those lines can be re-cached without any
+ * network calls. Slides whose line counts differ (a translation that wrapped
+ * differently, or was hand-edited into a different shape) are skipped rather
+ * than guessed at. Saved entries always win over recovered ones.
+ */
+function recoverCacheFromSlides(song: Song): TranslationCache {
+  const saved = song.translationCache ?? {}
+  const targetLanguage = song.targetLanguage
+  if (!targetLanguage) return saved
+
+  const recovered: TranslationCache = {}
+  for (const slide of song.slides) {
+    if (slide.translationText === null) continue
+    const mainLines = slide.mainText.plainText.split('\n')
+    const translationLines = slide.translationText.plainText.split('\n')
+    if (mainLines.length !== translationLines.length) continue
+    for (const [i, sourceText] of mainLines.entries()) {
+      if (sourceText.trim() === '') continue
+      recovered[translationCacheKey(song.sourceLanguage, targetLanguage, sourceText)] = {
+        sourceText,
+        sourceLang: song.sourceLanguage,
+        targetLang: targetLanguage,
+        translatedText: translationLines[i],
+        fetchedAt: song.updatedAt,
+        overridden: false,
+      }
+    }
+  }
+  return { ...recovered, ...saved }
+}
+
 export const createSongSlice: Slice<SongSlice> = (set, get) => ({
   song: null,
 
   newSong: (title) => set({ song: emptySong(title) }),
 
-  setSong: (song) => set({ song }),
+  setSong: (song) => {
+    // Loading a song rehydrates the in-memory translation state from it: the
+    // cache (so a re-split doesn't re-translate) and the chosen target language
+    // (so the dropdown isn't blank). Songs saved before the cache was persisted
+    // get one recovered from the translations already on their slides.
+    const cache = recoverCacheFromSlides(song)
+    set({ song, cache, targetLanguage: song.targetLanguage ?? null })
+  },
 
   setSongTitle: (title) => {
     const song = get().song
@@ -505,6 +551,8 @@ export const createSongSlice: Slice<SongSlice> = (set, get) => ({
       groups: [group],
       targetLanguage: existing?.targetLanguage ?? null,
       sourceLanguage: existing?.sourceLanguage ?? 'en',
+      // Kept across a re-split: that's the whole point of caching per line.
+      translationCache: existing?.translationCache ?? {},
       layout: existing?.layout ?? 'original-translation',
       thirdLanguageColor: existing?.thirdLanguageColor ?? { ...DEFAULT_THIRD_LANGUAGE_COLOR },
       published: existing?.published ?? false,

@@ -53,6 +53,8 @@ export interface TranslationSlice {
   translationErrors: Record<string, string>
   translatingSlideIds: string[]
   setTargetLanguage: (lang: string | null) => void
+  /** Stores a cache in memory and on the song, so autosave persists it. */
+  commitCache: (cache: TranslationCache) => void
   translateSlide: (slideId: string) => Promise<void>
   translateAllSlides: () => Promise<void>
   /** Rebuilds every slide's translation from the per-line cache without any API

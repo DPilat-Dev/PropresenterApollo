@@ -1,6 +1,7 @@
 import { getCached, markOverridden } from '../lib/translation/translationCache'
 import { translateText } from '../lib/translation/translationClient'
 import { MyMemoryProvider } from '../lib/translation/providers/myMemoryProvider'
+import type { TranslationCache } from '../types/song'
 import type { Slice, TranslationSlice } from './types'
 
 export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
@@ -11,7 +12,19 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
   translationErrors: {},
   translatingSlideIds: [],
 
-  setTargetLanguage: (lang) => set({ targetLanguage: lang }),
+  setTargetLanguage: (lang) => {
+    // Mirrored onto the song so the chosen language is still there after a
+    // reload (the store field itself is in-memory only).
+    const song = get().song
+    set(song ? { targetLanguage: lang, song: { ...song, targetLanguage: lang } } : { targetLanguage: lang })
+  },
+
+  /** Stores the cache both in memory and on the song, so autosave persists it
+   * and a reloaded song can re-split without re-translating. */
+  commitCache: (cache: TranslationCache) => {
+    const song = get().song
+    set(song ? { cache, song: { ...song, translationCache: cache } } : { cache })
+  },
 
   translateSlide: async (slideId) => {
     const song = get().song
@@ -46,7 +59,7 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
         cache = result.cache
         translated.push(result.translatedText)
       }
-      set({ cache })
+      get().commitCache(cache)
       get().updateSlideText(slideId, 'translation', translated.join('\n'))
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
@@ -116,8 +129,8 @@ export const createTranslationSlice: Slice<TranslationSlice> = (set, get) => ({
     const targetLanguage = get().targetLanguage
     if (!targetLanguage) return
 
-    set({
-      cache: markOverridden(get().cache, get().sourceLanguage, targetLanguage, slide.mainText.plainText, text),
-    })
+    get().commitCache(
+      markOverridden(get().cache, get().sourceLanguage, targetLanguage, slide.mainText.plainText, text),
+    )
   },
 })

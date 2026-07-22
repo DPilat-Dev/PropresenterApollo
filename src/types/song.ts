@@ -123,6 +123,11 @@ export interface Song {
   targetLanguage: string | null
   /** Source (original) language code, shown in the Layout tab's Translation section. */
   sourceLanguage: string
+  /**
+   * Per-line translations saved with the song, so re-splitting after a reload
+   * refills translations from here instead of re-hitting the translation API.
+   */
+  translationCache: TranslationCache
   /** Active slide-composition preset (STYLE > Layout). */
   layout: SlideLayoutPreset
   /** Color used for a third-language line when a layout that shows one is active. */

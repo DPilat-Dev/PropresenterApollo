@@ -45,6 +45,7 @@ function makeSong(overrides: Partial<Song> = {}): Song {
     targetLanguage: null,
     artist: '',
     sourceLanguage: 'en',
+    translationCache: {},
     layout: 'original-translation',
     thirdLanguageColor: { r: 0.556863, g: 0.803922, b: 0.901961, a: 1 },
     published: false,
