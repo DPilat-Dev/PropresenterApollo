@@ -135,6 +135,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  /* Full viewport height so the footer's `margin-top: auto` holds it to the
+     bottom even when there are few enough songs not to fill the screen. */
+  min-height: 100vh;
 }
 
 .home-page__content {
@@ -1318,4 +1321,62 @@ input[type='color'] {
     height: auto;
     overflow: visible;
   }
+}
+
+/* ---- Home page footer ---- */
+
+.home-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.home-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px 28px 28px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.home-footer__brand {
+  color: var(--color-text);
+}
+
+.home-footer__brand em {
+  font-style: italic;
+}
+
+/* Pushes the links to the right edge on wide screens; on narrow screens the
+   flex-wrap above drops them onto their own line instead. */
+.home-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-left: auto;
+}
+
+.home-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.home-footer__links a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.home-footer__links a:focus-visible {
+  outline: 2px solid var(--color-accent-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }

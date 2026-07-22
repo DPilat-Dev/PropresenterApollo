@@ -65,7 +65,7 @@ export function AppHeader() {
         <span className="app-header__logo" aria-hidden="true">
           <MusicNoteIcon />
         </span>
-        <span className="app-header__name">Verse2Slide</span>
+        <span className="app-header__name">Glossa</span>
       </div>
 
       <nav className="app-header__nav" aria-label="Primary">

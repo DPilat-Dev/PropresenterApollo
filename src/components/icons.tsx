@@ -235,3 +235,23 @@ export function DownloadIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+/**
+ * The GitHub mark. Unlike the stroke-drawn icons above it's a solid glyph, so
+ * it sets its own fill/stroke rather than going through `base()`.
+ */
+export function GitHubIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden={true}
+      {...props}
+    >
+      <path d="M12 .5C5.73.5.98 5.24.98 11.52c0 4.86 3.15 8.98 7.52 10.44.55.1.75-.24.75-.53v-2.07c-3.06.67-3.7-1.3-3.7-1.3-.5-1.28-1.23-1.62-1.23-1.62-1-.68.08-.67.08-.67 1.1.08 1.69 1.14 1.69 1.14.98 1.69 2.58 1.2 3.21.92.1-.72.39-1.2.7-1.48-2.44-.28-5.01-1.22-5.01-5.45 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.4.11-2.92 0 0 .93-.3 3.04 1.13a10.5 10.5 0 0 1 5.54 0c2.1-1.43 3.03-1.13 3.03-1.13.6 1.52.22 2.64.11 2.92.7.77 1.13 1.75 1.13 2.95 0 4.24-2.58 5.17-5.03 5.44.4.34.75 1.01.75 2.04v3.03c0 .29.2.64.76.53a10.53 10.53 0 0 0 7.51-10.44C23.02 5.24 18.27.5 12 .5z" />
+    </svg>
+  )
+}
